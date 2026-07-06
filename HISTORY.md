@@ -10,3 +10,9 @@ Initial exploratory research into training-free cross-lingual segmentation and c
 
 ---
 
+## [2026-07-06] Multi-Script Candidate Detection Prototyping
+
+Prototyped Unicode block parsing and fast-path routing for distinct writing systems (Han, Arabic, Devanagari, Cyrillic, Latin).
+
+---
+
