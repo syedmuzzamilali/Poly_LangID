@@ -22,3 +22,9 @@ Formulated disjoint script boundary maps and verified adjacent script transition
 
 ---
 
+## [2026-07-17] Multi-Model Dependency Isolation & Environment Setup
+
+Configured FastText, GlotLID, and Lingua runtimes under a unified, reproducible virtual environment.
+
+---
+
