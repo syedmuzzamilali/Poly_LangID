@@ -146,8 +146,7 @@ flowchart TD
 
                     <div class="walkthrough-column">
                         <div class="pipeline-walkthrough">
-                            <h4>Quadrilingual Example Trace & Zero-Heuristic Design Situations</h4>
-                            <p class="walkthrough-intro">Below is a simple walkthrough of how our system processes a sentence containing four languages (English, Spanish, French, and German). It shows how the PolyBeta V5 pipeline easily separates and identifies each language:</p>
+                            <h4>How PolyBeta Works (Example)</h4>
                             
                             <div class="example-box">
                                 <code>"This summer is wonderful, porque tenemos mucho sol en la playa, mais il fait un peu trop chaud ce soir, aber das Bier ist sehr kalt und lecker!"</code>
@@ -156,48 +155,48 @@ flowchart TD
                             <div class="stage-card">
                                 <span class="stage-num">Stage 1</span>
                                 <div class="stage-body">
-                                    <span class="stage-title">Discovering the Languages Present</span>
-                                    <p class="stage-desc">Instead of guessing from all 26 supported languages on every single word (which causes confusion), the system first figures out exactly which languages are present in the whole sentence (English, Spanish, French, and German). It uses the <strong>FastText</strong> model to get a "big picture" view of the sentence and detects different alphabets (like Arabic or Chinese) automatically.</p>
+                                    <span class="stage-title">Discovering Languages</span>
+                                    <p class="stage-desc"><strong>FastText</strong> scans the whole sentence to figure out exactly which languages are present (English, Spanish, French, and German) to avoid confusion later.</p>
                                 </div>
                             </div>
 
                             <div class="stage-card">
                                 <span class="stage-num">Stage 2</span>
                                 <div class="stage-body">
-                                    <span class="stage-title">Splitting the Sentence into Words</span>
-                                    <p class="stage-desc">The sentence is carefully split into individual words. Punctuation marks (like commas or exclamation points) are kept attached to their words so they don't cause mistakes during identification.</p>
+                                    <span class="stage-title">Splitting Words</span>
+                                    <p class="stage-desc">The sentence is split into individual words while keeping punctuation safely attached.</p>
                                 </div>
                             </div>
 
                             <div class="stage-card">
                                 <span class="stage-num">Stage 3 & 4</span>
                                 <div class="stage-body">
-                                    <span class="stage-title">Evaluating Each Word using FastText and Lingua</span>
-                                    <p class="stage-desc">Every single word is analyzed by two powerful AI models: <strong>FastText</strong> and <strong>Lingua</strong>. Very obvious words (like <code>wonderful</code> for English, or <code>chaud</code> for French) are immediately identified with high confidence.</p>
+                                    <span class="stage-title">Evaluating Words</span>
+                                    <p class="stage-desc"><strong>FastText</strong> and <strong>Lingua</strong> analyze every word and instantly lock in obvious words (like <code>wonderful</code> for English).</p>
                                 </div>
                             </div>
 
                             <div class="stage-card">
                                 <span class="stage-num">Stage 5 & 6</span>
                                 <div class="stage-body">
-                                    <span class="stage-title">Checking the Context for Short Words</span>
-                                    <p class="stage-desc">Short words (like <code>"is"</code>, <code>"en"</code>, or <code>"il"</code>) can belong to many languages and confuse the models. To fix this, the system looks at the surrounding words to gather "context". By looking at the words immediately next to them, it confidently locks these tricky short words to the correct language (for example, identifying that <code>"il"</code> belongs with the French phrase <code>"mais il fait"</code>).</p>
+                                    <span class="stage-title">Checking Context</span>
+                                    <p class="stage-desc">For tricky short words (like <code>"is"</code> or <code>"il"</code>), the system looks at the surrounding words to correctly lock in the language.</p>
                                 </div>
                             </div>
 
                             <div class="stage-card">
                                 <span class="stage-num">Stage 7 & 8</span>
                                 <div class="stage-body">
-                                    <span class="stage-title">Bringing it All Together</span>
-                                    <p class="stage-desc">The system compares the answers from both the <strong>FastText</strong> and <strong>Lingua</strong> models. When both models agree on the language of a word, that decision is locked in.</p>
+                                    <span class="stage-title">Bringing it Together</span>
+                                    <p class="stage-desc">If both <strong>FastText</strong> and <strong>Lingua</strong> agree on a word, the decision becomes final.</p>
                                 </div>
                             </div>
 
                             <div class="stage-card">
                                 <span class="stage-num">Stage 9</span>
                                 <div class="stage-body">
-                                    <span class="stage-title">Fixing the Tricky Borders Between Languages</span>
-                                    <p class="stage-desc">Sometimes a sentence switches languages right on a tiny transition word (like <code>"porque"</code> or <code>"mais"</code>). The system is smart enough to understand that these words usually introduce the next phrase, so it correctly groups <code>"porque"</code> with the Spanish section and <code>"mais"</code> with the French section. It also handles isolated "loanwords" by looking at the languages surrounding them.</p>
+                                    <span class="stage-title">Fixing Borders</span>
+                                    <p class="stage-desc">Transition words (like <code>"porque"</code>) are smartly grouped with the phrase they introduce.</p>
                                 </div>
                             </div>
 
@@ -205,11 +204,7 @@ flowchart TD
                                 <span class="stage-num">Stage 10</span>
                                 <div class="stage-body">
                                     <span class="stage-title">Final Output</span>
-                                    <p class="stage-desc">Finally, consecutive words of the same language are merged together into clean, continuous highlights:
-                                    <br/>• <code>[This summer is wonderful, ]</code> (English)
-                                    <br/>• <code>[porque tenemos mucho sol en la playa, ]</code> (Spanish)
-                                    <br/>• <code>[mais il fait un peu trop chaud ce soir, ]</code> (French)
-                                    <br/>• <code>[aber das Bier ist sehr kalt und lecker!]</code> (German)</p>
+                                    <p class="stage-desc">Consecutive words of the same language are merged together into clean highlights.</p>
                                 </div>
                             </div>
                         </div>
