@@ -1,0 +1,4 @@
+Flask
+fasttext
+lingua-language-detector
+gunicorn

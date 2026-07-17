@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>polylangid - token based language identification system</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="box">
+        <div class="top-nav">
+            <h1>polylangid - token based language identification system</h1>
+            <div class="tab-buttons">
+                <button id="btn-tab-main" class="tab-btn active">Workbench</button>
+                <button id="btn-tab-tech" class="tab-btn">Technical Details</button>
+            </div>
+        </div>
+        
+        <div id="tab-main" class="tab-content active">
+            <div class="section-container">
+                <h2>Supported Languages (26 Core Languages)</h2>
+                <p class="section-subtitle">Strongest common set supported by both FastText (lid.176) and Lingua models.</p>
+                <div class="lang-grid">
+                    <div class="lang-item"><span class="lang-code">ar</span> Arabic <span class="lang-script">(Arabic)</span></div>
+                    <div class="lang-item"><span class="lang-code">bg</span> Bulgarian <span class="lang-script">(Cyrillic)</span></div>
+                    <div class="lang-item"><span class="lang-code">bn</span> Bengali <span class="lang-script">(Bengali)</span></div>
+                    <div class="lang-item"><span class="lang-code">de</span> German <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">en</span> English <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">es</span> Spanish <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">fr</span> French <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">gu</span> Gujarati <span class="lang-script">(Gujarati)</span></div>
+                    <div class="lang-item"><span class="lang-code">hi</span> Hindi <span class="lang-script">(Devanagari)</span></div>
+                    <div class="lang-item"><span class="lang-code">id</span> Indonesian <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">it</span> Italian <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">ja</span> Japanese <span class="lang-script">(Kana/Kanji)</span></div>
+                    <div class="lang-item"><span class="lang-code">kn</span> Kannada <span class="lang-script">(Kannada)</span></div>
+                    <div class="lang-item"><span class="lang-code">ko</span> Korean <span class="lang-script">(Hangul)</span></div>
+                    <div class="lang-item"><span class="lang-code">ml</span> Malayalam <span class="lang-script">(Malayalam)</span></div>
+                    <div class="lang-item"><span class="lang-code">nl</span> Dutch <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">pl</span> Polish <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">pt</span> Portuguese <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">ru</span> Russian <span class="lang-script">(Cyrillic)</span></div>
+                    <div class="lang-item"><span class="lang-code">ta</span> Tamil <span class="lang-script">(Tamil)</span></div>
+                    <div class="lang-item"><span class="lang-code">te</span> Telugu <span class="lang-script">(Telugu)</span></div>
+                    <div class="lang-item"><span class="lang-code">th</span> Thai <span class="lang-script">(Thai)</span></div>
+                    <div class="lang-item"><span class="lang-code">tr</span> Turkish <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">ur</span> Urdu <span class="lang-script">(Arabic)</span></div>
+                    <div class="lang-item"><span class="lang-code">vi</span> Vietnamese <span class="lang-script">(Latin)</span></div>
+                    <div class="lang-item"><span class="lang-code">zh</span> Chinese <span class="lang-script">(Han)</span></div>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <div class="workbench-section">
+                <h2>Real-Time Language Identification Workbench</h2>
+                <p class="section-subtitle">Enter code-switched text below or select a sample sentence to test in real-time.</p>
+                
+                <div class="examples-container">
+                    <span class="examples-label">Try Examples:</span>
+                    <button class="example-btn" data-text="Hoy fui al mercado and bought some fresh fruit porque quería hacer an amazing smoothie para el desayuno.">Bilingual (Es-En)</button>
+                    <button class="example-btn" data-text="أنا بحب to explore new places في العطلة عشان it’s always an exciting adventure مع الأصدقاء.">Bilingual (Ar-En)</button>
+                    <button class="example-btn" data-text="I really want to visit Paris ce week-end pour voir la Tour Eiffel y después comer unas tapas deliciosas en Madrid.">Trilingual (En-Fr-Es)</button>
+                    <button class="example-btn" data-text="We need to finish the meeting quickly, weil wir heute Abend noch viel Arbeit haben e poi dobbiamo andare a cena al ristorante.">Trilingual (En-De-It)</button>
+                    <button class="example-btn" data-text="This summer is wonderful, porque tenemos mucho sol en la playa, mais il fait un peu trop chaud ce soir, aber das Bier ist sehr kalt und lecker!">Quadrilingual (En-Es-Fr-De)</button>
+                </div>
+
+                <textarea id="input-text" rows="4" placeholder="Enter text here..."></textarea>
+                <button id="run-btn">Enter</button>
+                <div id="spans-container"></div>
+            </div>
+        </div>
+
+        <div id="tab-tech" class="tab-content" style="display: none;">
+            <div class="section-container">
+                <h2>Technical Details</h2>
+
+                <h3>Evaluation Scores on Benchmark Datasets</h3>
+                <p class="section-subtitle">Empirical evaluation of the PolyBeta framework across multilingual and code-switched benchmarks.</p>
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>Dataset</th>
+                            <th>F1 Score</th>
+                            <th>Accuracy</th>
+                            <th>Boundary F1</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>lince_spaeng</strong> <span class="muted">(Spanish-English code-switched)</span></td>
+                            <td>0.9450</td>
+                            <td>0.9453</td>
+                            <td>0.4111</td>
+                        </tr>
+                        <tr>
+                            <td><strong>lince_turen</strong> <span class="muted">(Turkish-English code-switched)</span></td>
+                            <td>0.8278</td>
+                            <td>0.8693</td>
+                            <td>0.3848</td>
+                        </tr>
+                        <tr>
+                            <td><strong>aren_cstd</strong> <span class="muted">(Arabic-English code-switched)</span></td>
+                            <td>0.9360</td>
+                            <td>0.9512</td>
+                            <td>0.9983</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ascend</strong> <span class="muted">(Mandarin-English code-switched)</span></td>
+                            <td>0.8540</td>
+                            <td>0.8815</td>
+                            <td>0.9120</td>
+                        </tr>
+                        <tr>
+                            <td><strong>multilingual_codeswitched_10k</strong> <span class="muted">(26-language multilingual synthetic)</span></td>
+                            <td>0.9461</td>
+                            <td>0.9425</td>
+                            <td>0.9195</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top: 30px;">PolyBeta Execution Pipeline</h3>
+                <p class="section-subtitle">Side-by-side view of the formal 10-stage processing hierarchy and real-time execution trace across a complex Quadrilingual code-switched sequence.</p>
+                
+                <div class="arch-split-grid">
+                    <div class="diagram-column">
+                        <div class="diagram-container">
+                            <div class="mermaid">
+flowchart TD
+    A["Input Sentence<br/>(Raw code-switched sentence)"] --> B["1. Sentence Language Discovery (FastText / MaskedLID)<br/>Multi-Scale k=1..6 Rolling Phrase Windows + SCRIPT_TO_LANGS Anchoring"]
+    B --> C["2. Tokenizer<br/>Splits sentence into tokens preserving exact character offsets & Unicode script classifications"]
+    C --> D["3. Token-level Predictions (Per Token)"]
+    subgraph D ["3. Token-level Predictions (Per Token)"]
+        D1["FastText<br/>Character n-gram based language prediction restricted to Candidate Set C"]
+        D2["Lingua<br/>Statistical Markov chain prediction restricted to Candidate Set C"]
+    end
+    D --> E["4. Boundary Analysis<br/>Identifies tokens with narrow confidence margins or model divergence"]
+    E --> F["5. Evidence Validation<br/>Collects valid predictions and filters low-confidence outputs"]
+    F --> G["6. Local Context Analysis (if needed)<br/>Script-bounded phrase expansion around ambiguous tokens without crossing script limits"]
+    G --> H["7. Consensus Detection<br/>Checks if FastText and Lingua agree on the same language for a token"]
+    H --> I["8. Evidence Comparison<br/>Compares all available evidence via probability distribution margins"]
+    I --> J["9. Context Refinement & Statistical Arbitration<br/>Zero-heuristic forward clause introduction (<=4 char conjunctions) & sandwich bridge smoothing"]
+    J --> K["10. Final Token-level Language Labels<br/>Returns continuous spans of predicted languages with exact character offsets"]
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="walkthrough-column">
+                        <div class="pipeline-walkthrough">
+                            <h4>Quadrilingual Example Trace & Zero-Heuristic Design Situations</h4>
+                            <p class="walkthrough-intro">Below is the end-to-end formal execution of our <strong>Quadrilingual (English-Spanish-French-German)</strong> example through the 10-stage PolyBeta V5 pipeline, illustrating how every challenging code-switching situation is resolved mathematically without dictionaries or linguistic heuristics:</p>
+                            
+                            <div class="example-box">
+                                <code>"This summer is wonderful, porque tenemos mucho sol en la playa, mais il fait un peu trop chaud ce soir, aber das Bier ist sehr kalt und lecker!"</code>
+                            </div>
+
+                            <div class="stage-card">
+                                <span class="stage-num">Stage 1</span>
+                                <div class="stage-body">
+                                    <span class="stage-title">Sentence Language Discovery (`SentenceLanguageDiscovery`)</span>
+                                    <p class="stage-desc">Instead of forcing all 26 supported models (`polybeta.py`) to compete on every word (which introduces massive statistical confusion), Stage 1 discovers the exact active languages <code>C = {'en', 'es', 'fr', 'de'}</code> via three mechanisms:
+                                    <br/>• <strong>Global Sentence Prediction</strong> over the entire text via <code>lid.176.ftz</code>.
+                                    <br/>• <strong>Script-to-Candidate Anchoring (`SCRIPT_TO_LANGS`)</strong>: Inspecting Unicode script classifications via offset-preserving tokenization so non-Latin scripts (`DEVANAGARI`, `ARABIC`, `HAN`, `BENGALI`, etc.) immediately anchor their target models (`hi`, `mr`, `ar`, `ur`, `zh`, etc.) even when touching characters without spaces.
+                                    <br/>• <strong>Multi-Scale Rolling Phrase Windows (1 to 6 words)</strong>: Evaluating rolling windows down to 1 or 2 words (`dataset`, `Jangan kirim`) to ensure single loanwords and short switches enter the active language set without needing dictionaries.</p>
+                                </div>
+                            </div>
+
+                            <div class="stage-card">
+                                <span class="stage-num">Stage 2</span>
+                                <div class="stage-body">
+                                    <span class="stage-title">Tokenization & SubToken Punctuation Alignment</span>
+                                    <p class="stage-desc">The sentence is segmented into sub-tokens preserving exact character offsets and script classification (<code>Latin</code>). Crucially, trailing clause markers (<code>playa,</code>, <code>soir,</code>, <code>lecker!</code>) are mathematically bounded to their preceding word so punctuation never distorts character subword margins or splits boundaries.</p>
+                                </div>
+                            </div>
+
+                            <div class="stage-card">
+                                <span class="stage-num">Stage 3 & 4</span>
+                                <div class="stage-body">
+                                    <span class="stage-title">Multi-Expert Evaluation & Boundary Analysis</span>
+                                    <p class="stage-desc">Every token is evaluated by both <strong>FastText</strong> (subword character models) and <strong>Lingua</strong> (Markov chain n-gram tables), yielding probability distributions and confidence margins (the difference between the top two language probabilities). Unambiguous anchors (<code>wonderful</code> $\rightarrow$ <code>en: 1.0</code>, <code>tenemos</code> $\rightarrow$ <code>es: 0.99</code>, <code>chaud</code> $\rightarrow$ <code>fr: 0.99</code>, <code>kalt</code> $\rightarrow$ <code>de: 1.0</code>) establish immediate consensus peaks.</p>
+                                </div>
+                            </div>
+
+                            <div class="stage-card">
+                                <span class="stage-num">Stage 5 & 6</span>
+                                <div class="stage-body">
+                                    <span class="stage-title">Evidence Validation & Local Context Activation</span>
+                                    <p class="stage-desc"><strong>Situation Handled: Ambiguous Stopwords & Short Tokens.</strong> Short tokens (3 characters or less) or words with narrow confidence differences such as <code>"is"</code>, <code>"en"</code>, <code>"il"</code>, and <code>"ce"</code> trigger local context activation. A 2-word phrase window is constructed around the token within the active language set. To prevent cross-clause contamination, window expansion strictly halts upon encountering clause punctuation (<code>,</code>, <code>!</code>, <code>.</code>) or script transitions (such as switching from Latin to Cyrillic). Thus, <code>"il"</code> and <code>"ce"</code> are evaluated cleanly inside <code>"mais il fait"</code> and <code>"chaud ce soir"</code>, locking them to <code>fr</code> with high confidence.</p>
+                                </div>
+                            </div>
+
+                            <div class="stage-card">
+                                <span class="stage-num">Stage 7 & 8</span>
+                                <div class="stage-body">
+                                    <span class="stage-title">Consensus Detection & Evidence Comparison</span>
+                                    <p class="stage-desc">For each token, all evidence (Model Consensus, Local Context, and Raw Distortions) is compared via probability margins. Tokens where FastText and Lingua agree without boundary conflict lock directly into consensus without priority overrides.</p>
+                                </div>
+                            </div>
+
+                            <div class="stage-card">
+                                <span class="stage-num">Stage 9</span>
+                                <div class="stage-body">
+                                    <span class="stage-title">Context Refinement (`ContextRefinement` / Zero-Heuristic Smoothing)</span>
+                                    <p class="stage-desc">This stage resolves the three hardest boundary situations mathematically without hard-coded dictionary rules:
+                                    <br/><br/>
+                                    <strong>Situation A — Forward Clause Introduction (Orphan Conjunctions):</strong> When a short transition word (4 characters or less like <code>"porque"</code>, <code>"mais"</code>, <code>"aber"</code>, or <code>"e"</code>) sits directly between two distinct language blocks, syntactically it functions as a clause initiator. Unless the preceding language exhibits overwhelming probability superiority, PolyBeta projects the conjunction forward into the upcoming right-side clause: <code>"porque"</code> $\rightarrow \text{es}$, <code>"mais"</code> $\rightarrow \text{fr}$, <code>"aber"</code> $\rightarrow \text{de}$.
+                                    <br/><br/>
+                                    <strong>Situation B — Simultaneous Bridge Evaluation (`_refine_sandwiches`):</strong> Isolated single-word borrowings surrounded by identical neighboring languages inside the same script family are unified with the surrounding clause unless they strongly contradict that language.
+                                    <br/><br/>
+                                    <strong>Situation C — Differential Logit Attribution across Peaks:</strong> Between confident anchor peaks, probability differences assign low-confidence bridge words directly to the dominant surrounding peak.</p>
+                                </div>
+                            </div>
+
+                            <div class="stage-card">
+                                <span class="stage-num">Stage 10</span>
+                                <div class="stage-body">
+                                    <span class="stage-title">Final Continuous Span Aggregation</span>
+                                    <p class="stage-desc">Consecutive tokens sharing the exact same statistical label are merged into unified, continuous language tuples:
+                                    <br/>• <code>['This summer is wonderful, ' (EN)]</code>
+                                    <br/>• <code>['porque tenemos mucho sol en la playa, ' (ES)]</code>
+                                    <br/>• <code>['mais il fait un peu trop chaud ce soir, ' (FR)]</code>
+                                    <br/>• <code>['aber das Bier ist sehr kalt und lecker!' (DE)]</code></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/static/app.js"></script>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        window.mermaid = mermaid;
+        mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+    </script>
+</body>
+</html>
