@@ -655,6 +655,7 @@ class LocalContextAnalyzer:
         candidate_langs: Iterable[str],
         experts: List,
         boundary_ev: BoundaryEvidence,
+        text: str = "",
     ) -> List[Evidence]:
         if not segments or not (0 <= token_idx < len(segments)):
             return []
@@ -663,13 +664,15 @@ class LocalContextAnalyzer:
 
         start_w = token_idx
         while start_w > 0 and segments[start_w - 1][1] == script and (token_idx - start_w) < 2:
-            if any(segments[start_w - 1][0].endswith(p) for p in '.,!?;:'):
+            gap = text[segments[start_w - 1][3]:segments[start_w][2]] if text else ""
+            if any(p in gap for p in '.,!?;:'):
                 break
             start_w -= 1
 
         end_w = token_idx + 1
         while end_w < len(segments) and segments[end_w][1] == script and (end_w - token_idx) <= 2:
-            if any(segments[end_w - 1][0].endswith(p) for p in '.,!?;:'):
+            gap = text[segments[end_w - 1][3]:segments[end_w][2]] if text else ""
+            if any(p in gap for p in '.,!?;:'):
                 break
             end_w += 1
 
@@ -1469,7 +1472,7 @@ class LIDV5Pipeline:
             local_evidences = None
             if LocalContextAnalyzer.should_trigger(token_str, None, boundary_ev, evidences):
                 local_evidences = LocalContextAnalyzer.analyze(
-                    idx, segments, candidate_langs, self.experts, boundary_ev
+                    idx, segments, candidate_langs, self.experts, boundary_ev, text
                 )
 
             decision = ArbitrationEngine.arbitrate(
