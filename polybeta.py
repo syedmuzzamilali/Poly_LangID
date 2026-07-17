@@ -476,11 +476,12 @@ class SentenceLanguageDiscovery:
             except Exception:
                 self.model = None
 
-    def discover_candidates(self, text: str) -> Set[str]:
+    def discover_candidates(self, text: str, experts=None) -> Set[str]:
         if not text or not text.strip() or self.model is None:
             return {"en"}
 
-        words = [w.strip(".,!?;:\"'()[]{}") for w in text.replace('\n', ' ').strip().split() if len(w.strip(".,!?;:\"'()[]{}")) >= 1]
+        words = [w.strip(".,!?;:\"'()[]{}") for w in text.replace('\n', ' ').strip().split()]
+        words = [w for w in words if len(w) >= 1]
         if not words:
             return {"en"}
 
@@ -509,30 +510,40 @@ class SentenceLanguageDiscovery:
 
         # 2. Global Sentence Prediction
         try:
-            preds = self.model.f.predict(" ".join(words), 10, 0.0, "strict")
+            preds = self.model.f.predict(" ".join(words), 5, 0.0, "strict")
             if preds:
                 probs, labels = zip(*preds)
                 for prob, label in zip(probs, labels):
                     code = normalize_lang_code(label)
                     if code in SUPPORTED_LANGS and float(prob) >= max(0.05, uniform_prior * 2.0):
                         D.add(code)
-
-            # 3. Multi-Scale Rolling Phrase Window Discovery (k=1 through k=6)
-            for k in (1, 2, 3, 4, 5, 6):
-                for j in range(len(words) - k + 1):
-                    w_text = " ".join(words[j:j+k])
-                    if len(w_text) >= 2:
-                        top_n = 3 if k <= 2 else 2
-                        w_preds = self.model.f.predict(w_text, top_n, 0.0, "strict")
-                        if w_preds:
-                            w_probs, w_labels = zip(*w_preds)
-                            for prob, label in zip(w_probs, w_labels):
-                                code = normalize_lang_code(label)
-                                threshold = max(0.04, uniform_prior * 1.5) if k <= 2 else 0.35
-                                if code in SUPPORTED_LANGS and float(prob) >= threshold:
-                                    D.add(code)
         except Exception:
             pass
+
+        # 3. Lingua Global & Token-Level Candidate Discovery
+        if experts:
+            for exp in experts:
+                if exp.name == "Lingua" and exp.model:
+                    try:
+                        confs = exp.model.compute_language_confidence_values(text)
+                        for conf in confs[:3]:
+                            if conf.value > 0.1:
+                                lang = LINGUA_LANG_MAP.get(str(conf.language).split(".")[-1].upper().strip())
+                                if lang in SUPPORTED_LANGS:
+                                    D.add(lang)
+                    except Exception:
+                        pass
+                    
+                    for w in words:
+                        if len(w) >= 4:
+                            try:
+                                confs = exp.model.compute_language_confidence_values(w)
+                                if confs and confs[0].value > 0.50:
+                                    lang = LINGUA_LANG_MAP.get(str(confs[0].language).split(".")[-1].upper().strip())
+                                    if lang in SUPPORTED_LANGS:
+                                        D.add(lang)
+                            except Exception:
+                                pass
 
         if not D:
             D.add("en")
@@ -656,62 +667,82 @@ class LocalContextAnalyzer:
         experts: List,
         boundary_ev: BoundaryEvidence,
         text: str = "",
+        token_predictions: List[List[Prediction]] = None,
     ) -> List[Evidence]:
         if not segments or not (0 <= token_idx < len(segments)):
             return []
 
         token_str, script, _, _ = segments[token_idx]
 
+        def is_strong_anchor(idx: int) -> bool:
+            if not token_predictions or idx < 0 or idx >= len(token_predictions):
+                return False
+            preds = token_predictions[idx]
+            valid = [p for p in preds if p.label]
+            if not valid:
+                return False
+            best = max(valid, key=lambda p: p.margin)
+            all_agree = all(p.label == best.label for p in valid)
+            return all_agree and best.margin >= 0.5
+
         start_w = token_idx
-        while start_w > 0 and segments[start_w - 1][1] == script and (token_idx - start_w) < 2:
+        while start_w > 0 and segments[start_w - 1][1] == script and (token_idx - start_w) < 3:
             gap = text[segments[start_w - 1][3]:segments[start_w][2]] if text else ""
             if any(p in gap for p in '.,!?;:'):
                 break
             start_w -= 1
+            if is_strong_anchor(start_w):
+                break
 
         end_w = token_idx + 1
-        while end_w < len(segments) and segments[end_w][1] == script and (end_w - token_idx) <= 2:
+        while end_w < len(segments) and segments[end_w][1] == script and (end_w - token_idx) <= 3:
             gap = text[segments[end_w - 1][3]:segments[end_w][2]] if text else ""
             if any(p in gap for p in '.,!?;:'):
                 break
             end_w += 1
+            if is_strong_anchor(end_w - 1):
+                break
 
-        phrase_tokens = [segments[j][0] for j in range(start_w, end_w)]
-        if len(phrase_tokens) <= 1:
-            return []
-
-        phrase_str = " ".join(phrase_tokens)
         local_evidences: List[Evidence] = []
-
-        for expert in experts:
-            if expert.supports_token(token_str, script, candidate_langs):
-                raw_dist, res_dist = expert.evaluate(phrase_str, candidate_langs)
-                if res_dist:
-                    lab, conf, margin = top_label(res_dist)
-                    ranked = sorted(res_dist.items(), key=lambda item: item[1], reverse=True)
-                    model_name = f"LocalContext({expert.name})"
-                    pred = Prediction(
-                        label=lab,
-                        confidence=conf,
-                        margin=margin,
-                        ranked_candidates=ranked,
-                        model=model_name,
-                        raw_dist=raw_dist,
-                        res_dist=res_dist,
-                    )
-                    local_evidences.append(
-                        Evidence(
-                            model=model_name,
-                            prediction=pred,
-                            margin=margin,
+        
+        def evaluate_phrase(phrase_str: str, prefix: str):
+            for expert in experts:
+                if expert.supports_token(token_str, script, candidate_langs):
+                    raw_dist, res_dist = expert.evaluate(phrase_str, candidate_langs)
+                    if res_dist:
+                        lab, conf, margin = top_label(res_dist)
+                        ranked = sorted(res_dist.items(), key=lambda item: item[1], reverse=True)
+                        model_name = f"LocalContext{prefix}({expert.name})"
+                        pred = Prediction(
+                            label=lab,
                             confidence=conf,
-                            boundary=boundary_ev,
-                            agreement_count=1,
-                            script=script,
-                            token=token_str,
-                            raw_candidates=ranked,
+                            margin=margin,
+                            ranked_candidates=ranked,
+                            model=model_name,
+                            raw_dist=raw_dist,
+                            res_dist=res_dist,
                         )
-                    )
+                        local_evidences.append(
+                            Evidence(
+                                model=model_name,
+                                prediction=pred,
+                                margin=margin,
+                                confidence=conf,
+                                boundary=boundary_ev,
+                                agreement_count=1,
+                                script=script,
+                                token=token_str,
+                                raw_candidates=ranked,
+                            )
+                        )
+
+        if start_w < token_idx:
+            left_tokens = [segments[i][0] for i in range(start_w, token_idx + 1)]
+            evaluate_phrase(" ".join(left_tokens), "Left")
+
+        if end_w > token_idx + 1:
+            right_tokens = [segments[i][0] for i in range(token_idx, end_w)]
+            evaluate_phrase(" ".join(right_tokens), "Right")
 
         label_counts = Counter(e.prediction.label for e in local_evidences)
         for e in local_evidences:
@@ -1280,7 +1311,7 @@ class ContextRefinement:
                         if len(tok_str) <= 4:
                             if p_left - p_right > 0.15:
                                 target_label = left_label
-                            else:
+                            elif p_right - p_left > 0.15:
                                 target_label = right_label
                         else:
                             if p_left - p_right > 0.15:
@@ -1289,20 +1320,21 @@ class ContextRefinement:
                                 target_label = right_label
                             elif curr_dec.label in (left_label, right_label):
                                 target_label = curr_dec.label
-                            else:
-                                target_label = left_label
                     elif left_label:
                         target_label = left_label
                     elif right_label:
                         target_label = right_label
 
                     if target_label is not None and target_label != curr_dec.label:
-                        can_smooth = (
-                            label_counts[curr_dec.label] == 1
-                            or not curr_dec.is_consensus_or_agreement()
-                            or len(tok_str) <= 4
-                            or curr_dec.distribution.get(target_label, 0.0) > 0.0
-                        )
+                        # Do not smooth away high-confidence single-word code-switches
+                        if curr_dec.margin > 0.40 and len(tok_str) > 3:
+                            can_smooth = False
+                        else:
+                            can_smooth = (
+                                not curr_dec.is_consensus_or_agreement()
+                                or len(tok_str) <= 4
+                                or curr_dec.distribution.get(target_label, 0.0) > 0.0
+                            )
                         if can_smooth:
                             new_dist = dict(curr_dec.distribution)
                             new_dist[target_label] = max(new_dist.get(target_label, 0.0), curr_dec.distribution.get(curr_dec.label, 0.0))
@@ -1428,7 +1460,7 @@ class LIDV5Pipeline:
         if allowed_langs is not None:
             candidate_langs = CandidateGenerator.get_candidates(allowed_langs)
         else:
-            discovered = self.discovery.discover_candidates(text)
+            discovered = self.discovery.discover_candidates(text, self.experts)
             candidate_langs = CandidateGenerator.get_candidates(discovered)
 
         segments = Tokenizer.segment_text_with_offsets(text)
@@ -1472,7 +1504,7 @@ class LIDV5Pipeline:
             local_evidences = None
             if LocalContextAnalyzer.should_trigger(token_str, None, boundary_ev, evidences):
                 local_evidences = LocalContextAnalyzer.analyze(
-                    idx, segments, candidate_langs, self.experts, boundary_ev, text
+                    idx, segments, candidate_langs, self.experts, boundary_ev, text, token_predictions
                 )
 
             decision = ArbitrationEngine.arbitrate(

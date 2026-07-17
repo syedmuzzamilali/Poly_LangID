@@ -658,6 +658,26 @@ def main():
                     "spans": spans
                 })
         print(f"Loaded {len(dataset)} samples from CSV.")
+    elif args.dataset.endswith(".jsonl"):
+        import re
+        dataset = []
+        with open(args.dataset, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip(): continue
+                obj = json.loads(line)
+                if "tagged_text" in obj:
+                    raw_text = obj.get("raw_text", "")
+                    tagged_text = obj["tagged_text"]
+                    spans = []
+                    matches = re.finditer(r"\[([a-z]{2,3})\]\s*([^\[]+)", tagged_text)
+                    for match in matches:
+                        lang = match.group(1).strip()
+                        text = match.group(2).strip()
+                        if text:
+                            spans.append({"text": text, "lang": lang})
+                    if spans:
+                        dataset.append({"text": raw_text, "spans": spans})
+        print(f"Loaded {len(dataset)} samples from JSONL.")
     else:
         with open(args.dataset, "r", encoding="utf-8") as f:
             raw_json = json.load(f)
