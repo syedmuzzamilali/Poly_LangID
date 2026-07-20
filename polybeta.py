@@ -361,6 +361,41 @@ class FastTextExpert(BaseExpert):
                 dist = {}
         except Exception:
             dist = {}
+
+        # Cross-script contamination guard: if the input text is purely Latin-script
+        # but FastText returns a non-Latin-dominant language as top prediction,
+        # that is a model artifact (e.g., 'pero'→ja, 'documentation'→ru, 'QA'→id).
+        # When ALL predictions for a Latin text are non-Latin-script languages,
+        # we abstain entirely (return {}) so Lingua gets sole authority.
+        if dist:
+            text_script = dominant_script(text)
+            NON_LATIN_LANG_SCRIPTS = {
+                "zh": "HAN", "ja": "HAN", "ko": "HANGUL", "hi": "DEVANAGARI",
+                "ar": "ARABIC", "ru": "CYRILLIC", "th": "THAI", "bn": "BENGALI",
+                "mr": "DEVANAGARI", "ta": "TAMIL", "te": "TELUGU", "kn": "KANNADA",
+                "gu": "GUJARATI", "ml": "MALAYALAM",
+            }
+            LATIN_LANGS = {"en", "es", "fr", "de", "pt", "it", "nl", "pl", "tr", "id", "vi", "ur"}
+            if text_script == "LATIN":
+                top_lang = max(dist, key=dist.__getitem__)
+                if top_lang in NON_LATIN_LANG_SCRIPTS:
+                    best_latin_prob = max((dist.get(l, 0.0) for l in LATIN_LANGS), default=0.0)
+                    if best_latin_prob < dist[top_lang]:
+                        # Check if ANY Latin-script language has meaningful probability
+                        has_latin_signal = any(dist.get(l, 0.0) >= 0.02 for l in LATIN_LANGS)
+                        if not has_latin_signal:
+                            # Completely abstain: no trustworthy Latin prediction available
+                            dist = {}
+                        else:
+                            # Penalize non-Latin predictions by 95% discount
+                            penalized = {}
+                            for lang, prob in dist.items():
+                                if lang in NON_LATIN_LANG_SCRIPTS:
+                                    penalized[lang] = prob * 0.05
+                                else:
+                                    penalized[lang] = prob
+                            dist = normalize_probs(penalized) if any(v > 0 for v in penalized.values()) else {}
+
         self._cache[key] = dist
         return self._restrict(dist, allowed)
 
@@ -509,14 +544,18 @@ class SentenceLanguageDiscovery:
                 D.update(SCRIPT_TO_LANGS[s_upper])
 
         # 2. Global Sentence Prediction
+        global_pool = set()
         try:
             preds = self.model.f.predict(" ".join(words), 5, 0.0, "strict")
             if preds:
                 probs, labels = zip(*preds)
                 for prob, label in zip(probs, labels):
                     code = normalize_lang_code(label)
-                    if code in SUPPORTED_LANGS and float(prob) >= max(0.05, uniform_prior * 2.0):
-                        D.add(code)
+                    if code in SUPPORTED_LANGS:
+                        if float(prob) >= max(0.05, uniform_prior * 2.0):
+                            D.add(code)
+                        if float(prob) >= 0.01:
+                            global_pool.add(code)
         except Exception:
             pass
 
@@ -526,8 +565,13 @@ class SentenceLanguageDiscovery:
                 if exp.name == "Lingua" and exp.model:
                     try:
                         confs = exp.model.compute_language_confidence_values(text)
-                        for conf in confs[:3]:
-                            if conf.value > 0.1:
+                        for conf in confs[:8]:
+                            if conf.value >= 0.003:
+                                lang = LINGUA_LANG_MAP.get(str(conf.language).split(".")[-1].upper().strip())
+                                if lang in SUPPORTED_LANGS:
+                                    global_pool.add(lang)
+                        for conf in confs:
+                            if conf.value >= 0.05:
                                 lang = LINGUA_LANG_MAP.get(str(conf.language).split(".")[-1].upper().strip())
                                 if lang in SUPPORTED_LANGS:
                                     D.add(lang)
@@ -540,10 +584,85 @@ class SentenceLanguageDiscovery:
                                 confs = exp.model.compute_language_confidence_values(w)
                                 if confs and confs[0].value > 0.50:
                                     lang = LINGUA_LANG_MAP.get(str(confs[0].language).split(".")[-1].upper().strip())
-                                    if lang in SUPPORTED_LANGS:
+                                    if lang in global_pool:
                                         D.add(lang)
                             except Exception:
                                 pass
+
+        # 3b. Per-Latin-Word FastText Scan: For each Latin-script token, run FastText
+        #     unrestricted to discover language candidates the global sentence-level scan misses.
+        #     This catches cases like S32 where 'but' → en(0.99) but the global sentence FT
+        #     returns German/Chinese dominance and never adds 'en' to D.
+        #     Words with confidence >= 0.80 go into D directly; >= 0.30 into global_pool only.
+        for seg_tok, seg_script, _, _ in Tokenizer.segment_text_with_offsets(text):
+            if seg_script == "LATIN":
+                clean = seg_tok.strip(".,!?;:\"'()[]{}")
+                if clean and len(clean) >= 2:
+                    try:
+                        preds_w = self.model.f.predict(clean, 3, 0.0, "strict")
+                        if preds_w:
+                            probs_w, labels_w = zip(*preds_w)
+                            for prob_w, label_w in zip(probs_w, labels_w):
+                                code_w = normalize_lang_code(label_w)
+                                if code_w in SUPPORTED_LANGS:
+                                    if float(prob_w) >= 0.80:
+                                        D.add(code_w)
+                                        global_pool.add(code_w)
+                                    elif float(prob_w) >= 0.30:
+                                        global_pool.add(code_w)
+                    except Exception:
+                        pass
+
+        # 4. Per-Script Contiguous-Run Scan: prevents candidate blackout when non-Latin scripts dominate.
+        #    Unlike grouping ALL Latin tokens together (which causes Spanish to swallow English 'and'),
+        #    we evaluate each CONTIGUOUS Latin run independently. This correctly identifies:
+        #    - 'El sistema respondió correctamente' → es
+        #    - 'and' → en  (isolated Latin run after Cyrillic/CJK)
+        #    - 'latency' → en  (isolated Latin run after Devanagari)
+        latin_runs: List[List[str]] = []
+        current_run: List[str] = []
+        for seg_tok, seg_script, _, _ in Tokenizer.segment_text_with_offsets(text):
+            if seg_script == "LATIN":
+                clean = seg_tok.strip(".,!?;:\"'()[]{}")
+                if clean and len(clean) >= 2:
+                    current_run.append(clean)
+            else:
+                if current_run:
+                    latin_runs.append(current_run)
+                    current_run = []
+        if current_run:
+            latin_runs.append(current_run)
+
+        for run_toks in latin_runs:
+            phrase = " ".join(run_toks)
+            if not phrase.strip():
+                continue
+            # FastText on each Latin contiguous run
+            try:
+                preds = self.model.f.predict(phrase, 3, 0.0, "strict")
+                if preds:
+                    probs, labels = zip(*preds)
+                    for prob, label in zip(probs, labels):
+                        code = normalize_lang_code(label)
+                        if code in SUPPORTED_LANGS and float(prob) >= 0.05:
+                            D.add(code)
+                            global_pool.add(code)
+            except Exception:
+                pass
+            # Lingua on each Latin contiguous run
+            if experts:
+                for exp in experts:
+                    if exp.name == "Lingua" and exp.model:
+                        try:
+                            confs = exp.model.compute_language_confidence_values(phrase)
+                            for conf in confs[:3]:
+                                if conf.value >= 0.05:
+                                    lang = LINGUA_LANG_MAP.get(str(conf.language).split(".")[-1].upper().strip())
+                                    if lang in SUPPORTED_LANGS:
+                                        D.add(lang)
+                                        global_pool.add(lang)
+                        except Exception:
+                            pass
 
         if not D:
             D.add("en")
@@ -638,8 +757,6 @@ class LocalContextAnalyzer:
             return False
         if not token_str.isalpha():
             return False
-        if token_str.isupper() and len(token_str) <= 4:
-            return False
         return True
 
     @staticmethod
@@ -657,6 +774,13 @@ class LocalContextAnalyzer:
             best = EvidenceComparison.select_strongest(evidences)
             if best.margin <= 0.20 or (len(token_str) <= 3 and best.margin <= 0.25):
                 return True
+            # Lingua low-confidence trigger: when FT and Lingua agree but Lingua's confidence
+            # is very low (< 0.15), both are likely biased. Use local context as tiebreaker.
+            lingua_evs = [e for e in evidences if 'Lingua' in e.model and not e.model.startswith('LocalContext')]
+            if lingua_evs:
+                lingua_best = max(lingua_evs, key=lambda e: e.confidence)
+                if lingua_best.confidence < 0.15:
+                    return True
         return False
 
     @staticmethod
@@ -686,25 +810,21 @@ class LocalContextAnalyzer:
             return all_agree and best.margin >= 0.5
 
         start_w = token_idx
-        while start_w > 0 and segments[start_w - 1][1] == script and (token_idx - start_w) < 3:
+        while start_w > 0 and segments[start_w - 1][1] == script and (token_idx - start_w) < 2:
             gap = text[segments[start_w - 1][3]:segments[start_w][2]] if text else ""
             if any(p in gap for p in '.,!?;:'):
                 break
             start_w -= 1
-            if is_strong_anchor(start_w):
-                break
 
         end_w = token_idx + 1
-        while end_w < len(segments) and segments[end_w][1] == script and (end_w - token_idx) <= 3:
+        while end_w < len(segments) and segments[end_w][1] == script and (end_w - token_idx) <= 2:
             gap = text[segments[end_w - 1][3]:segments[end_w][2]] if text else ""
             if any(p in gap for p in '.,!?;:'):
                 break
             end_w += 1
-            if is_strong_anchor(end_w - 1):
-                break
 
         local_evidences: List[Evidence] = []
-        
+
         def evaluate_phrase(phrase_str: str, prefix: str):
             for expert in experts:
                 if expert.supports_token(token_str, script, candidate_langs):
@@ -743,6 +863,41 @@ class LocalContextAnalyzer:
         if end_w > token_idx + 1:
             right_tokens = [segments[i][0] for i in range(token_idx, end_w)]
             evaluate_phrase(" ".join(right_tokens), "Right")
+
+        if start_w < token_idx and end_w > token_idx + 1:
+            combined_tokens = [segments[i][0] for i in range(start_w, end_w)]
+            evaluate_phrase(" ".join(combined_tokens), "Combined")
+
+        # Cross-script context sweep: for isolated Latin tokens surrounded by non-Latin scripts,
+        # collect the nearest same-script neighbors by skipping across different-script tokens.
+        # This resolves cases like 'documentation' in '...हमें documentation भी complete..'
+        # where the nearest Latin context is 'finished' (4 positions away via DEVANAGARI).
+        # We limit the scan to 3 positions to prevent distant same-language tokens from
+        # contaminating context for isolated tokens.
+        if start_w == token_idx and end_w == token_idx + 1 and script == "LATIN":
+            # No same-script immediate neighbors found. Gather cross-script Latin context (max 3 pos).
+            # Limit to 3 positions to prevent far-away tokens from contaminating context.
+            cross_left = []
+            ci = token_idx - 1
+            steps_left = 0
+            while ci >= 0 and len(cross_left) < 2 and steps_left < 3:
+                if segments[ci][1] == script:
+                    cross_left.insert(0, segments[ci][0])
+                ci -= 1
+                steps_left += 1
+
+            cross_right = []
+            ci = token_idx + 1
+            steps_right = 0
+            while ci < len(segments) and len(cross_right) < 2 and steps_right < 3:
+                if segments[ci][1] == script:
+                    cross_right.append(segments[ci][0])
+                ci += 1
+                steps_right += 1
+
+            if cross_left or cross_right:
+                cross_phrase = " ".join(cross_left + [token_str] + cross_right)
+                evaluate_phrase(cross_phrase, "CrossCtx")
 
         label_counts = Counter(e.prediction.label for e in local_evidences)
         for e in local_evidences:
@@ -1013,6 +1168,49 @@ class ContextRefinement:
                 while end < n and segments[end][1] == script and not segments[end][0].isdigit():
                     end += 1
                 if end > idx + 1:
+                    # Majority-vote smoothing within the script block.
+                    # If one label dominates (>= 60% of block tokens), smooth minority-label tokens
+                    # to the majority if they have support >= 0.05 for the majority label.
+                    # This corrects single-token noise within otherwise uniform segments
+                    # (e.g., 'scales'→es inside The[en], architecture[en], well[en]).
+                    block_labels = [smoothed[j].label for j in range(idx, end) if smoothed[j].label]
+                    if block_labels:
+                        from collections import Counter as _Counter
+                        block_counts = _Counter(block_labels)
+                        majority_label, majority_count = block_counts.most_common(1)[0]
+                        if majority_count >= len(block_labels) * 0.60 and len(block_labels) >= 3:
+                            for j in range(idx, end):
+                                curr_dec = smoothed[j]
+                                tok_str = segments[j][0]
+                                if (curr_dec.label and curr_dec.label != majority_label
+                                        and curr_dec.distribution.get(majority_label, 0.0) >= 0.05):
+                                    # Check not outer-anchored (same label 2 positions away)
+                                    outer_left = j - 2 >= 0 and smoothed[j - 2].label == curr_dec.label
+                                    outer_right = j + 2 < len(smoothed) and smoothed[j + 2].label == curr_dec.label
+                                    if not (outer_left or outer_right):
+                                        new_dist = dict(curr_dec.distribution)
+                                        new_dist[majority_label] = max(new_dist.get(majority_label, 0.0), curr_dec.distribution.get(curr_dec.label, 0.0))
+                                        if curr_dec.trace:
+                                            smoothed[j] = PredictionResult.create_with_trace(
+                                            label=majority_label,
+                                            decided_by=f"{curr_dec.decided_by}+ContextRefinement",
+                                            reason=f"Spatial context smoothing applied: zero-heuristic majority-vote within {segments[idx][1]} script block projected to {majority_label}.",
+                                            competing_predictions=curr_dec.competing_predictions,
+                                            distribution=new_dist,
+                                            token=curr_dec.trace.token,
+                                            model_predictions=curr_dec.trace.model_predictions,
+                                            decision_stage=DecisionStage.CONTEXT_REFINEMENT,
+                                            )
+                                        else:
+                                            smoothed[j] = PredictionResult(
+                                            label=majority_label,
+                                            decided_by=f"{curr_dec.decided_by}+ContextRefinement",
+                                            reason=f"Spatial context smoothing applied: zero-heuristic majority-vote within {segments[idx][1]} script block projected to {majority_label}.",
+                                            competing_predictions=curr_dec.competing_predictions,
+                                            distribution=new_dist,
+                                            trace=None,
+                                            )
+
                     peaks = []
                     for j in range(idx, end):
                         dec = smoothed[j]
@@ -1062,9 +1260,9 @@ class ContextRefinement:
                                 for j in range(k1 + 1, k2):
                                     curr_dec = smoothed[j]
                                     tok_str = segments[j][0]
-                                    has_support = curr_dec.distribution.get(l1, 0.0) >= 0.10
+                                    has_support = curr_dec.distribution.get(l1, 0.0) >= 0.05
                                     matches_outer = (j + 2 < len(smoothed) and smoothed[j + 2].label == curr_dec.label) or (j - 2 >= 0 and smoothed[j - 2].label == curr_dec.label)
-                                    if curr_dec.label != l1 and not curr_dec.is_consensus_or_agreement() and has_support and not matches_outer and (curr_dec.margin <= 0.25 or len(tok_str) <= 3):
+                                    if curr_dec.label != l1 and has_support and not matches_outer and (not curr_dec.is_consensus_or_agreement() or curr_dec.margin <= 0.25 or len(tok_str) <= 3):
                                         new_dist = dict(curr_dec.distribution)
                                         new_dist[l1] = max(new_dist.get(l1, 0.0), curr_dec.distribution.get(curr_dec.label, 0.0))
                                         if curr_dec.trace:
@@ -1201,6 +1399,8 @@ class ContextRefinement:
                 next_script = segments[i + 1][1]
 
                 if prev_script == curr_script == next_script and prev_dec.label == next_dec.label and curr_dec.label != prev_dec.label:
+                    if i + 2 < n and smoothed[i + 2].label == curr_dec.label and segments[i + 2][1] == curr_script:
+                        continue
                     tok_str = segments[i][0]
                     has_multi_right = (i + 2 < n and smoothed[i + 2].label == prev_dec.label)
                     has_multi_left = (i - 2 >= 0 and smoothed[i - 2].label == prev_dec.label)
@@ -1326,13 +1526,15 @@ class ContextRefinement:
                         target_label = right_label
 
                     if target_label is not None and target_label != curr_dec.label:
-                        # Do not smooth away high-confidence single-word code-switches
-                        if curr_dec.margin > 0.40 and len(tok_str) > 3:
+                        # Do not smooth away high-confidence single-word code-switches unless surrounded by identical neighbors (sandwiched)
+                        is_sandwiched = (left_label and right_label and left_label == right_label == target_label)
+                        if curr_dec.margin > 0.40 and len(tok_str) > 3 and not is_sandwiched:
                             can_smooth = False
                         else:
                             can_smooth = (
                                 not curr_dec.is_consensus_or_agreement()
                                 or len(tok_str) <= 4
+                                or is_sandwiched
                                 or curr_dec.distribution.get(target_label, 0.0) > 0.0
                             )
                         if can_smooth:
@@ -1386,9 +1588,10 @@ class SubTokenSplitter:
                         
                     # Aggregate base likelihood across all supporting experts
                     base_likelihood = 0.0
+                    clean_curr = curr_tok.strip('.,!?;:"\'()[]{}') or curr_tok
                     for expert in experts:
-                        if expert.supports_token(curr_tok, script, candidate_langs):
-                            _, res = expert.evaluate(curr_tok, candidate_langs)
+                        if expert.supports_token(clean_curr, script, candidate_langs):
+                            _, res = expert.evaluate(clean_curr, candidate_langs)
                             if res:
                                 base_likelihood = max(base_likelihood, max(res.values()))
                     
@@ -1475,9 +1678,10 @@ class LIDV5Pipeline:
         token_predictions: List[List[Prediction]] = []
         for idx, (token_str, script, start_idx, end_idx) in enumerate(segments):
             preds: List[Prediction] = []
+            clean_tok = token_str.strip('.,!?;:"\'()[]{}') or token_str
             for expert in self.experts:
-                if expert.supports_token(token_str, script, candidate_langs):
-                    raw_dist, res_dist = expert.evaluate(token_str, candidate_langs)
+                if expert.supports_token(clean_tok, script, candidate_langs):
+                    raw_dist, res_dist = expert.evaluate(clean_tok, candidate_langs)
                     if res_dist:
                         lab, conf, margin = top_label(res_dist)
                         ranked = sorted(res_dist.items(), key=lambda item: item[1], reverse=True)
