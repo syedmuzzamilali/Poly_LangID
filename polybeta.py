@@ -578,14 +578,35 @@ class SentenceLanguageDiscovery:
                     except Exception:
                         pass
                     
+                    # Build lingua_sentence_pool: languages Lingua sees at sentence level with >= 0.03
+                    # This is used to gate the per-word scan below, preventing spurious admission
+                    # of languages that are near-zero at sentence level (e.g. fr=0.007 on Spanish text).
+                    lingua_sentence_pool = set()
+                    for conf in confs:
+                        if conf.value >= 0.03:
+                            lang = LINGUA_LANG_MAP.get(str(conf.language).split(".")[-1].upper().strip())
+                            if lang in SUPPORTED_LANGS:
+                                lingua_sentence_pool.add(lang)
+
                     for w in words:
                         if len(w) >= 4:
                             try:
                                 confs = exp.model.compute_language_confidence_values(w)
                                 if confs and confs[0].value > 0.50:
                                     lang = LINGUA_LANG_MAP.get(str(confs[0].language).split(".")[-1].upper().strip())
-                                    if lang in global_pool:
-                                        D.add(lang)
+                                    if lang not in global_pool:
+                                        continue
+                                    # For Romance languages (es/pt/fr/it/ro) when the dominant sentence
+                                    # language is also Romance, apply the stricter sentence-level gate:
+                                    # only admit if Lingua saw this language at sentence level (>= 0.03).
+                                    # This prevents 'amaré'→fr from entering D when text is Spanish (fr=0.007).
+                                    # For non-Romance languages (de, tr, id, etc.) global_pool is sufficient.
+                                    _ROMANCE = frozenset({"es", "pt", "fr", "it", "ro", "ca"})
+                                    _top_sent_lang = next(iter(lingua_sentence_pool)) if lingua_sentence_pool else ""
+                                    _is_romance_confusion = lang in _ROMANCE and _top_sent_lang in _ROMANCE
+                                    if _is_romance_confusion and lang not in lingua_sentence_pool:
+                                        continue
+                                    D.add(lang)
                             except Exception:
                                 pass
 
@@ -593,7 +614,9 @@ class SentenceLanguageDiscovery:
         #     unrestricted to discover language candidates the global sentence-level scan misses.
         #     This catches cases like S32 where 'but' → en(0.99) but the global sentence FT
         #     returns German/Chinese dominance and never adds 'en' to D.
-        #     Words with confidence >= 0.80 go into D directly; >= 0.30 into global_pool only.
+        #     Words with confidence >= 0.80 go into D directly; >= 0.75 into global_pool only.
+        #     Note: threshold raised from 0.30 to 0.75 to prevent borderline predictions (e.g.,
+        #     'le'→fr=0.716 on Spanish text) from polluting global_pool with false candidates.
         for seg_tok, seg_script, _, _ in Tokenizer.segment_text_with_offsets(text):
             if seg_script == "LATIN":
                 clean = seg_tok.strip(".,!?;:\"'()[]{}")
@@ -608,7 +631,7 @@ class SentenceLanguageDiscovery:
                                     if float(prob_w) >= 0.80:
                                         D.add(code_w)
                                         global_pool.add(code_w)
-                                    elif float(prob_w) >= 0.30:
+                                    elif float(prob_w) >= 0.75:
                                         global_pool.add(code_w)
                     except Exception:
                         pass
