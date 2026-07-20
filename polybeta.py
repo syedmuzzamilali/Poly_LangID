@@ -1520,6 +1520,11 @@ class ContextRefinement:
                                 target_label = right_label
                             elif curr_dec.label in (left_label, right_label):
                                 target_label = curr_dec.label
+                            elif p_left == 0.0 and p_right == 0.0:
+                                # Neither neighbor has model support: fall back to the left neighbor
+                                # to preserve leftward phrase continuity (e.g., 'Eiffel' follows
+                                # 'la Tour'[fr] so it belongs to the French span, not German).
+                                target_label = left_label
                     elif left_label:
                         target_label = left_label
                     elif right_label:
@@ -1528,7 +1533,16 @@ class ContextRefinement:
                     if target_label is not None and target_label != curr_dec.label:
                         # Do not smooth away high-confidence single-word code-switches unless surrounded by identical neighbors (sandwiched)
                         is_sandwiched = (left_label and right_label and left_label == right_label == target_label)
-                        if curr_dec.margin > 0.40 and len(tok_str) > 3 and not is_sandwiched:
+                        # Exception: if the token appears exactly once (true singleton orphan)
+                        # AND neither neighbor label has any model support, the high-confidence
+                        # prediction is almost certainly a model error (e.g., proper nouns like
+                        # 'Eiffel' → de surrounded by French). Allow smoothing in this case.
+                        is_true_singleton_with_no_neighbor_support = (
+                            label_counts.get(curr_dec.label, 0) == 1
+                            and curr_dec.distribution.get(left_label or "", 0.0) == 0.0
+                            and curr_dec.distribution.get(right_label or "", 0.0) == 0.0
+                        )
+                        if curr_dec.margin > 0.40 and len(tok_str) > 3 and not is_sandwiched and not is_true_singleton_with_no_neighbor_support:
                             can_smooth = False
                         else:
                             can_smooth = (
@@ -1536,6 +1550,7 @@ class ContextRefinement:
                                 or len(tok_str) <= 4
                                 or is_sandwiched
                                 or curr_dec.distribution.get(target_label, 0.0) > 0.0
+                                or is_true_singleton_with_no_neighbor_support
                             )
                         if can_smooth:
                             new_dist = dict(curr_dec.distribution)
