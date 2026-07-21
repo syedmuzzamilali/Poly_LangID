@@ -28,3 +28,9 @@ Configured FastText, GlotLID, and Lingua runtimes under a unified, reproducible 
 
 ---
 
+## [2026-07-21] Language Inventory Verification & ISO Mapping
+
+Established normalized 2-letter ISO 639-1 language code mappings across all base models.
+
+---
+
