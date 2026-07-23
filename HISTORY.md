@@ -34,3 +34,9 @@ Established normalized 2-letter ISO 639-1 language code mappings across all base
 
 ---
 
+## [2026-07-23] Tokenizer Delimiter & Punctuation Preservation
+
+Refined tokenizer offset preservation for contractions, hyphens, and mixed alphanumeric strings.
+
+---
+
