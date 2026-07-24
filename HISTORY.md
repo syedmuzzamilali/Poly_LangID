@@ -40,3 +40,9 @@ Refined tokenizer offset preservation for contractions, hyphens, and mixed alpha
 
 ---
 
+## [2026-07-24] Span Reconstruction & Non-Destructive Refiner Design
+
+Designed boundary refinement algorithms to preserve authentic single-token code-switches while smoothing noise.
+
+---
+
