@@ -46,3 +46,9 @@ Designed boundary refinement algorithms to preserve authentic single-token code-
 
 ---
 
+## [2026-07-27] Linear-Pass Token Scanning Optimization
+
+Benchmarked and tuned token classification throughput to achieve over 700 tokens per second.
+
+---
+
