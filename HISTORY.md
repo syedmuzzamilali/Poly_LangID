@@ -52,3 +52,9 @@ Benchmarked and tuned token classification throughput to achieve over 700 tokens
 
 ---
 
+## [2026-08-20] High-Volume Token Alignment & Extraction
+
+Standardized token alignment pipelines for LinCE, ASCEND, and Twitter code-mixed corpora (over 9,400 samples processed).
+
+---
+
