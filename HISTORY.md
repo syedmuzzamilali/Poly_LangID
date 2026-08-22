@@ -58,3 +58,9 @@ Standardized token alignment pipelines for LinCE, ASCEND, and Twitter code-mixed
 
 ---
 
+## [2026-08-22] Automated Benchmark Evaluation Framework
+
+Built automated evaluation runner calculating micro token accuracy, macro F1, and boundary precision.
+
+---
+
