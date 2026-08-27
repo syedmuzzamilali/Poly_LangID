@@ -64,3 +64,9 @@ Built automated evaluation runner calculating micro token accuracy, macro F1, an
 
 ---
 
+## [2026-08-27] Indic & Arabic Multi-Script Dataset Curation
+
+Curated authentic native-script Bengali, Hindi, and Arabic code-switched benchmarks, removing transliteration noise.
+
+---
+
