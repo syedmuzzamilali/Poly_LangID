@@ -70,3 +70,9 @@ Curated authentic native-script Bengali, Hindi, and Arabic code-switched benchma
 
 ---
 
+## [2026-09-17] Corpus Ingestion Pipeline & Schema Normalization
+
+Normalized over 50,000 code-switched sentences into canonical 8-field JSONL format across German, Spanish, and Indonesian pairs.
+
+---
+
