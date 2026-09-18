@@ -76,3 +76,9 @@ Normalized over 50,000 code-switched sentences into canonical 8-field JSONL form
 
 ---
 
+## [2026-09-18] Token Macro F1 & Boundary F1 Metric Implementation
+
+Implemented strict boundary transition evaluation and span overlap metrics in evaluation/metrics.py.
+
+---
+
