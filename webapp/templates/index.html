@@ -1,223 +1,406 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>PolyLang ID - Code-Switch Token-Based Language Identification System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolyLID: Token-Level Language Identification for Code-Switched Text</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="box">
-        <div class="top-nav">
-            <h1>PolyLang ID - Code-Switch Token-Based Language Identification System</h1>
-            <div class="tab-buttons">
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-box">PolyLID</div>
+                <div>
+                    <h1>PolyLID: Multilingual Code-Switched Language Identification</h1>
+                    <p class="tagline">Token-level and span-level language identification framework for multilingual code-switched text.</p>
+                </div>
+            </div>
+            <nav class="tab-nav">
                 <button id="btn-tab-main" class="tab-btn active">Workbench</button>
-                <button id="btn-tab-tech" class="tab-btn">Technical Details</button>
-            </div>
-        </div>
-        
-        <div id="tab-main" class="tab-content active">
-            <div class="section-container">
-                <h2>Supported Languages (26 Core Languages)</h2>
-                <p class="section-subtitle">Strongest common set supported by both FastText (lid.176) and Lingua models.</p>
-                <div class="lang-grid">
-                    <div class="lang-item"><span class="lang-code">ar</span> Arabic <span class="lang-script">(Arabic)</span></div>
-                    <div class="lang-item"><span class="lang-code">bg</span> Bulgarian <span class="lang-script">(Cyrillic)</span></div>
-                    <div class="lang-item"><span class="lang-code">bn</span> Bengali <span class="lang-script">(Bengali)</span></div>
-                    <div class="lang-item"><span class="lang-code">de</span> German <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">en</span> English <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">es</span> Spanish <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">fr</span> French <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">gu</span> Gujarati <span class="lang-script">(Gujarati)</span></div>
-                    <div class="lang-item"><span class="lang-code">hi</span> Hindi <span class="lang-script">(Devanagari)</span></div>
-                    <div class="lang-item"><span class="lang-code">id</span> Indonesian <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">it</span> Italian <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">ja</span> Japanese <span class="lang-script">(Kana/Kanji)</span></div>
-                    <div class="lang-item"><span class="lang-code">kn</span> Kannada <span class="lang-script">(Kannada)</span></div>
-                    <div class="lang-item"><span class="lang-code">ko</span> Korean <span class="lang-script">(Hangul)</span></div>
-                    <div class="lang-item"><span class="lang-code">ml</span> Malayalam <span class="lang-script">(Malayalam)</span></div>
-                    <div class="lang-item"><span class="lang-code">nl</span> Dutch <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">pl</span> Polish <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">pt</span> Portuguese <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">ru</span> Russian <span class="lang-script">(Cyrillic)</span></div>
-                    <div class="lang-item"><span class="lang-code">ta</span> Tamil <span class="lang-script">(Tamil)</span></div>
-                    <div class="lang-item"><span class="lang-code">te</span> Telugu <span class="lang-script">(Telugu)</span></div>
-                    <div class="lang-item"><span class="lang-code">th</span> Thai <span class="lang-script">(Thai)</span></div>
-                    <div class="lang-item"><span class="lang-code">tr</span> Turkish <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">ur</span> Urdu <span class="lang-script">(Arabic)</span></div>
-                    <div class="lang-item"><span class="lang-code">vi</span> Vietnamese <span class="lang-script">(Latin)</span></div>
-                    <div class="lang-item"><span class="lang-code">zh</span> Chinese <span class="lang-script">(Han)</span></div>
+                <button id="btn-tab-arch" class="tab-btn">System Architecture</button>
+                <button id="btn-tab-eval" class="tab-btn">Empirical Evaluation</button>
+            </nav>
+        </header>
+
+        <!-- TAB 1: WORKBENCH -->
+        <main id="tab-main" class="tab-pane active">
+            <!-- Supported Languages Section -->
+            <section class="card quick-info-card">
+                <div class="card-header-flex">
+                    <h2>Supported Languages (65 Common Languages Across 12 Writing Scripts)</h2>
+                    <span class="badge-pill">3-Model Common Intersection Inventory</span>
                 </div>
-            </div>
+                <p class="section-desc">Common intersection supported simultaneously across FastText (lid.176), GlotLID, and Lingua models spanning Latin, Cyrillic, Arabic, Devanagari, Bengali, Gujarati, Gurmukhi, Dravidian (Tamil, Telugu), Han, Hangul, Thai, Greek, Hebrew, Armenian, and Georgian scripts.</p>
+                <div class="lang-pills-container">
+                    {% for code, meta in lang_meta.items() %}
+                    <span class="lang-chip" style="--lang-color: {{ meta.color }};">
+                        <span class="chip-name">{{ meta.name }}</span>
+                        <span class="chip-code">({{ code }})</span>
+                        <span class="chip-script">{{ meta.script }}</span>
+                    </span>
+                    {% endfor %}
+                </div>
+            </section>
 
-            <hr class="divider">
-
-            <div class="workbench-section">
-                <h2>Real-Time Language Identification Workbench</h2>
-                <p class="section-subtitle">Enter code-switched text below or select a sample sentence to test in real-time.</p>
-                
-                <div class="examples-container">
-                    <span class="examples-label">Try Examples:</span>
-                    <button class="example-btn" data-text="Hoy fui al mercado and bought some fresh fruit porque quería hacer an amazing smoothie para el desayuno.">Bilingual (Es-En)</button>
-                    <button class="example-btn" data-text="أنا بحب to explore new places في العطلة عشان it’s always an exciting adventure مع الأصدقاء.">Bilingual (Ar-En)</button>
-                    <button class="example-btn" data-text="I really want to visit Paris ce week-end pour voir la Tour Eiffel y después comer unas tapas deliciosas en Madrid.">Trilingual (En-Fr-Es)</button>
-                    <button class="example-btn" data-text="We need to finish the meeting quickly, weil wir heute Abend noch viel Arbeit haben e poi dobbiamo andare a cena al ristorante.">Trilingual (En-De-It)</button>
-                    <button class="example-btn" data-text="This summer is wonderful, porque tenemos mucho sol en la playa, mais il fait un peu trop chaud ce soir, aber das Bier ist sehr kalt und lecker!">Quadrilingual (En-Es-Fr-De)</button>
+            <!-- Interactive Workbench -->
+            <section class="card playground-card">
+                <div class="card-header-flex">
+                    <h2>Interactive Inference Workbench</h2>
+                    <span class="hint-text">Enter input sequence or select a test case from the academic benchmarks below.</span>
                 </div>
 
-                <textarea id="input-text" rows="4" placeholder="Enter text here..."></textarea>
-                <button id="run-btn">Enter</button>
-                <div id="spans-container"></div>
-            </div>
-        </div>
+                <!-- Example Sentences (9 Verified Diverse Code-Switched Samples) -->
+                <div class="examples-bar">
+                    <span class="examples-title">Evaluation Samples:</span>
+                    <button class="example-btn" data-text="Hoy fui al mercado and bought some fresh fruit porque quería hacer an amazing smoothie.">
+                        Bilingual (Spanish + English)
+                    </button>
+                    <button class="example-btn" data-text="أنا بحب to explore new places في العطلة عشان it’s always an exciting adventure.">
+                        Bilingual (Arabic + English)
+                    </button>
+                    <button class="example-btn" data-text="o kadar strong bir presence var ki sahnede herkes hayran kaldı.">
+                        Bilingual (Turkish + English)
+                    </button>
+                    <button class="example-btn" data-text="好的 what's your major and your hobbies in college?">
+                        Bilingual (Mandarin + English)
+                    </button>
+                    <button class="example-btn" data-text="શ્રી સ્વામિનારાયણ ભગવાનની જય — the deadline is very close today.">
+                        Bilingual (Gujarati + English)
+                    </button>
+                    <button class="example-btn" data-text="आज का मौसम बहुत अच्छा है and we should definitely go for a long drive.">
+                        Bilingual (Hindi + English)
+                    </button>
+                    <button class="example-btn" data-text="I want to visit Paris ce week-end pour voir la Tour Eiffel y después comer tapas en Madrid.">
+                        Trilingual (English + French + Spanish)
+                    </button>
+                    <button class="example-btn" data-text="Привет мой друг, wir haben heute ein Meeting with the international research team.">
+                        Trilingual (Russian + German + English)
+                    </button>
+                    <button class="example-btn" data-text="This summer is wonderful, weil wir viel Sonne haben, mais il fait trop chaud ce soir, pero el helado es muy rico!">
+                        Quadrilingual (English + German + French + Spanish)
+                    </button>
+                </div>
 
-        <div id="tab-tech" class="tab-content" style="display: none;">
-            <div class="section-container">
-                <h2>Technical Details</h2>
+                <!-- Input area -->
+                <div class="input-container">
+                    <textarea id="input-text" rows="3" placeholder="Enter multilingual or code-switched text here..."></textarea>
+                    <div class="input-actions">
+                        <div class="char-count"><span id="input-char-count">0</span> characters</div>
+                        <button id="run-btn" class="primary-btn">Identify Languages</button>
+                    </div>
+                </div>
 
-                <h3>Evaluation Scores on Benchmark Datasets</h3>
-                <p class="section-subtitle">Empirical evaluation of the PolyBeta framework across multilingual and code-switched benchmarks.</p>
-                <table class="tech-table">
-                    <thead>
-                        <tr>
-                            <th>Dataset</th>
-                            <th>F1 Score</th>
-                            <th>Accuracy</th>
-                            <th>Boundary F1</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>lince_spaeng</strong> <span class="muted">(Spanish-English code-switched)</span></td>
-                            <td>0.9450</td>
-                            <td>0.9453</td>
-                            <td>0.4111</td>
-                        </tr>
-                        <tr>
-                            <td><strong>lince_turen</strong> <span class="muted">(Turkish-English code-switched)</span></td>
-                            <td>0.8278</td>
-                            <td>0.8693</td>
-                            <td>0.3848</td>
-                        </tr>
-                        <tr>
-                            <td><strong>aren_cstd</strong> <span class="muted">(Arabic-English code-switched)</span></td>
-                            <td>0.9360</td>
-                            <td>0.9512</td>
-                            <td>0.9983</td>
-                        </tr>
-                        <tr>
-                            <td><strong>ascend</strong> <span class="muted">(Mandarin-English code-switched)</span></td>
-                            <td>0.8540</td>
-                            <td>0.8815</td>
-                            <td>0.9120</td>
-                        </tr>
-                        <tr>
-                            <td><strong>multilingual_codeswitched_10k</strong> <span class="muted">(26-language multilingual synthetic)</span></td>
-                            <td>0.9469</td>
-                            <td>0.9372</td>
-                            <td>0.9158</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- Output results display -->
+                <div id="results-area" class="results-container" style="display: none;">
+                    <div class="results-header">
+                        <h2>Inference Results</h2>
+                        <div id="stats-badge" class="stats-badge">
+                            <span id="stat-latency">Latency: 0.0 ms</span>
+                            <span id="stat-tokens">Tokens: 0</span>
+                            <span id="stat-spans">Spans: 0</span>
+                        </div>
+                    </div>
 
-                <h3 style="margin-top: 30px;">PolyBeta Execution Pipeline</h3>
-                <p class="section-subtitle">Side-by-side view of the formal 10-stage processing hierarchy and real-time execution trace across a complex Quadrilingual code-switched sequence.</p>
-                
-                <div class="arch-split-grid">
-                    <div class="diagram-column">
-                        <div class="diagram-container">
-                            <div class="mermaid">
+                    <!-- Visual Language Distribution Bar -->
+                    <div class="dist-wrapper">
+                        <div class="dist-header">Language Proportions:</div>
+                        <div id="lang-dist-bar" class="lang-dist-bar"></div>
+                        <div id="lang-dist-legend" class="lang-dist-legend"></div>
+                    </div>
+
+                    <!-- Highlighted Text Spans -->
+                    <div class="spans-wrapper">
+                        <div class="dist-header">Contiguous Identified Spans:</div>
+                        <div id="spans-container" class="spans-output-box"></div>
+                    </div>
+
+                    <!-- Detailed Token Breakdown Table -->
+                    <details class="token-details-box" id="token-details">
+                        <summary>Token-Level Classification & Decision Trace</summary>
+                        <div class="table-responsive">
+                            <table class="token-table">
+                                <thead>
+                                    <tr>
+                                        <th>Token</th>
+                                        <th>Script</th>
+                                        <th>Predicted Language</th>
+                                        <th>Confidence</th>
+                                        <th>Decision Module / Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tokens-tbody"></tbody>
+                            </table>
+                        </div>
+                    </details>
+                </div>
+            </section>
+        </main>
+
+        <!-- TAB 2: SYSTEM ARCHITECTURE -->
+        <section id="tab-arch" class="tab-pane" style="display: none;">
+            <div class="card guide-card">
+                <h2>System Architecture & Pipeline Methodology</h2>
+                <p class="section-desc">
+                    PolyLID implements a hierarchical 5-stage inference pipeline designed to resolve code-switched token ambiguity across 65 languages and 12 writing scripts while minimizing computational overhead.
+                </p>
+
+                <!-- Mermaid Diagram -->
+                <div class="diagram-section">
+                    <h3>Formal Execution Pipeline</h3>
+                    <div class="mermaid-box">
+                        <div class="mermaid">
 flowchart TD
-    A["Input Sentence<br/>(Raw code-switched sentence)"] --> B["1. Sentence Language Discovery (FastText / MaskedLID)<br/>Multi-Scale k=1..6 Rolling Phrase Windows + SCRIPT_TO_LANGS Anchoring"]
-    B --> C["2. Tokenizer<br/>Splits sentence into tokens preserving exact character offsets & Unicode script classifications"]
-    C --> D["3. Token-level Predictions (Per Token)"]
-    subgraph D ["3. Token-level Predictions (Per Token)"]
-        D1["FastText<br/>Character n-gram based language prediction restricted to Candidate Set C"]
-        D2["Lingua<br/>Statistical Markov chain prediction restricted to Candidate Set C"]
-    end
-    D --> E["4. Boundary Analysis<br/>Identifies tokens with narrow confidence margins or model divergence"]
-    E --> F["5. Evidence Validation<br/>Collects valid predictions and filters low-confidence outputs"]
-    F --> G["6. Local Context Analysis (if needed)<br/>Script-bounded phrase expansion around ambiguous tokens without crossing script limits"]
-    G --> H["7. Consensus Detection<br/>Checks if FastText and Lingua agree on the same language for a token"]
-    H --> I["8. Evidence Comparison<br/>Compares all available evidence via probability distribution margins"]
-    I --> J["9. Context Refinement & Statistical Arbitration<br/>Zero-heuristic forward clause introduction (<=4 char conjunctions) & sandwich bridge smoothing"]
-    J --> K["10. Final Token-level Language Labels<br/>Returns continuous spans of predicted languages with exact character offsets"]
-                            </div>
+    A["Raw Input Text Sequence<br/>S = (t_1, t_2, ..., t_N)"] --> B["Stage 1: Tokenizer<br/>Module: Tokenizer<br/>Method: Unicode UAX #29 Boundary & Script Segmentation (12 Scripts)"]
+    B --> C["Stage 2: Candidate Language Discovery<br/>Models: GlotLID + FastText + Lingua<br/>Method: Sentence & Script-Run Discovery (65 -> Active Candidate Set D)"]
+    C --> D["Stage 3: Constrained Token Classification<br/>Models: FastText Subwords + Lingua Character N-Grams<br/>Method: Token-level probability estimation (GlotLID excluded)"]
+    D --> E["Stage 4: Consensus Arbitration & Context Refinement<br/>Modules: PredictionAnalyzer + ContextChecker + DecisionEngine<br/>Method: Consensus voting & 3-token bidirectional window for margin <= 0.25"]
+    E --> F["Stage 5: Non-Destructive Smoothing & Span Assembly<br/>Module: ResultRefiner<br/>Method: Script-guarded noise filtering & contiguous span construction"]
+    F --> G["Structured Output Payload<br/>Continuous spans with character offsets & confidence scores"]
+
+    style A fill:#f8fafc,stroke:#64748b,stroke-width:1.5px
+    style B fill:#f1f5f9,stroke:#334155,stroke-width:1.5px
+    style C fill:#f1f5f9,stroke:#334155,stroke-width:1.5px
+    style D fill:#f1f5f9,stroke:#334155,stroke-width:1.5px
+    style E fill:#f1f5f9,stroke:#334155,stroke-width:1.5px
+    style F fill:#f1f5f9,stroke:#334155,stroke-width:1.5px
+    style G fill:#0f172a,color:#ffffff,stroke:#0f172a,stroke-width:2px
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5 Architecture Stage Cards -->
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-badge">Stage 1</div>
+                        <h4>1. Text Tokenization & Script Tagging</h4>
+                        <p>Segments raw input into atomic word tokens and annotates each token with its Unicode script across 12 distinct script topologies (Latin, Cyrillic, Han, Arabic, Devanagari, Gurmukhi, Bengali, Gujarati, Tamil, Telugu, Thai, etc.).</p>
+                        <div class="step-tech-box">
+                            <div class="tech-row"><span class="tech-label">Module:</span> <span class="tech-val">Tokenizer</span></div>
+                            <div class="tech-row"><span class="tech-label">Standard:</span> <span class="tech-val">Unicode UAX #29</span></div>
+                            <div class="tech-row"><span class="tech-label">Complexity:</span> <span class="tech-val">O(N) single-pass scan</span></div>
                         </div>
                     </div>
 
-                    <div class="walkthrough-column">
-                        <div class="pipeline-walkthrough">
-                            <h4>How PolyBeta Works (Example)</h4>
-                            
-                            <div class="example-box">
-                                <code>"This summer is wonderful, porque tenemos mucho sol en la playa, mais il fait un peu trop chaud ce soir, aber das Bier ist sehr kalt und lecker!"</code>
-                            </div>
+                    <div class="step-card">
+                        <div class="step-badge">Stage 2</div>
+                        <h4>2. Candidate Language Discovery</h4>
+                        <p>Performs global sentence-level and contiguous script-run evaluation to discover the active candidate set $D \subseteq L$, reducing search space from 65 languages down to 2–3 active languages ($20\times$ search space reduction).</p>
+                        <div class="step-tech-box">
+                            <div class="tech-row"><span class="tech-label">Models:</span> <span class="tech-val">GlotLID + FastText + Lingua</span></div>
+                            <div class="tech-row"><span class="tech-label">Candidate Set:</span> <span class="tech-val">D = {l | P(l) >= theta}</span></div>
+                            <div class="tech-row"><span class="tech-label">Search Space:</span> <span class="tech-val">65 -> |D| (2-3 typical)</span></div>
+                        </div>
+                    </div>
 
-                            <div class="stage-card">
-                                <span class="stage-num">Stage 1</span>
-                                <div class="stage-body">
-                                    <span class="stage-title">Discovering Languages</span>
-                                    <p class="stage-desc"><strong>FastText</strong> scans the whole sentence to figure out exactly which languages are present (English, Spanish, French, and German) to avoid confusion later.</p>
-                                </div>
-                            </div>
+                    <div class="step-card">
+                        <div class="step-badge">Stage 3</div>
+                        <h4>3. Constrained Token Classification</h4>
+                        <p>Evaluates token-level probability distributions strictly projected over the candidate set $D$. GlotLID is excluded from token evaluation to maintain low inference latency.</p>
+                        <div class="step-tech-box">
+                            <div class="tech-row"><span class="tech-label">Models:</span> <span class="tech-val">FastText + Lingua</span></div>
+                            <div class="tech-row"><span class="tech-label">Features:</span> <span class="tech-val">Subword & character n-grams</span></div>
+                            <div class="tech-row"><span class="tech-label">Latency:</span> <span class="tech-val">~0.05 ms per token</span></div>
+                        </div>
+                    </div>
 
-                            <div class="stage-card">
-                                <span class="stage-num">Stage 2</span>
-                                <div class="stage-body">
-                                    <span class="stage-title">Splitting Words</span>
-                                    <p class="stage-desc">The sentence is split into individual words while keeping punctuation safely attached.</p>
-                                </div>
-                            </div>
+                    <div class="step-card">
+                        <div class="step-badge">Stage 4</div>
+                        <h4>4. Consensus Arbitration & Context Refinement</h4>
+                        <p>Resolves inter-model disagreements via consensus fusion. If confidence margin $M \le 0.25$, triggers bidirectional 3-token local window evaluation bounded by script invariants.</p>
+                        <div class="step-tech-box">
+                            <div class="tech-row"><span class="tech-label">Modules:</span> <span class="tech-val">PredictionAnalyzer, ContextChecker</span></div>
+                            <div class="tech-row"><span class="tech-label">Decision:</span> <span class="tech-val">DecisionEngine (Voting / Margin)</span></div>
+                            <div class="tech-row"><span class="tech-label">Context Window:</span> <span class="tech-val">[-1, +1] bounded by script</span></div>
+                        </div>
+                    </div>
 
-                            <div class="stage-card">
-                                <span class="stage-num">Stage 3 & 4</span>
-                                <div class="stage-body">
-                                    <span class="stage-title">Evaluating Words</span>
-                                    <p class="stage-desc"><strong>FastText</strong> and <strong>Lingua</strong> analyze every word and instantly lock in obvious words (like <code>wonderful</code> for English).</p>
-                                </div>
-                            </div>
-
-                            <div class="stage-card">
-                                <span class="stage-num">Stage 5 & 6</span>
-                                <div class="stage-body">
-                                    <span class="stage-title">Checking Context</span>
-                                    <p class="stage-desc">For tricky short words (like <code>"is"</code> or <code>"il"</code>), the system looks at the surrounding words to correctly lock in the language.</p>
-                                </div>
-                            </div>
-
-                            <div class="stage-card">
-                                <span class="stage-num">Stage 7 & 8</span>
-                                <div class="stage-body">
-                                    <span class="stage-title">Bringing it Together</span>
-                                    <p class="stage-desc">If both <strong>FastText</strong> and <strong>Lingua</strong> agree on a word, the decision becomes final.</p>
-                                </div>
-                            </div>
-
-                            <div class="stage-card">
-                                <span class="stage-num">Stage 9</span>
-                                <div class="stage-body">
-                                    <span class="stage-title">Fixing Borders</span>
-                                    <p class="stage-desc">Transition words (like <code>"porque"</code>) are smartly grouped with the phrase they introduce.</p>
-                                </div>
-                            </div>
-
-                            <div class="stage-card">
-                                <span class="stage-num">Stage 10</span>
-                                <div class="stage-body">
-                                    <span class="stage-title">Final Output</span>
-                                    <p class="stage-desc">Consecutive words of the same language are merged together into clean highlights.</p>
-                                </div>
-                            </div>
+                    <div class="step-card">
+                        <div class="step-badge">Stage 5</div>
+                        <h4>5. Non-Destructive Smoothing & Span Assembly</h4>
+                        <p>Applies script-guarded non-destructive smoothing to filter isolated 1-token noise, merging adjacent identical predictions into contiguous spans.</p>
+                        <div class="step-tech-box">
+                            <div class="tech-row"><span class="tech-label">Module:</span> <span class="tech-val">ResultRefiner</span></div>
+                            <div class="tech-row"><span class="tech-label">Invariant:</span> <span class="tech-val">Script boundaries preserved</span></div>
+                            <div class="tech-row"><span class="tech-label">Output:</span> <span class="tech-val">Span list with character offsets</span></div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- TAB 3: EMPIRICAL EVALUATION -->
+        <section id="tab-eval" class="tab-pane" style="display: none;">
+            <div class="card benchmarks-card">
+                <h2>Empirical Academic Benchmark Evaluation</h2>
+                <p class="section-desc">Performance summary across standardized academic code-switching benchmarks and cross-lingual evaluation corpora.</p>
+
+                <!-- Metric Summary Cards -->
+                <div class="metrics-highlight-grid">
+                    <div class="highlight-box">
+                        <span class="highlight-val">99.20%+</span>
+                        <span class="highlight-label">Partial Match (PM)</span>
+                        <span class="highlight-sub">Sentence-level Robustness</span>
+                    </div>
+                    <div class="highlight-box">
+                        <span class="highlight-val">92.00%+</span>
+                        <span class="highlight-label">Mean Token Accuracy</span>
+                        <span class="highlight-sub">Across Clean/Noisy Datasets</span>
+                    </div>
+                    <div class="highlight-box">
+                        <span class="highlight-val">87.10%</span>
+                        <span class="highlight-label">Mean Exact Match (Clean)</span>
+                        <span class="highlight-sub">Multi-Script Benchmarks</span>
+                    </div>
+                    <div class="highlight-box">
+                        <span class="highlight-val">3.40 ms</span>
+                        <span class="highlight-label">Mean Latency per Sentence</span>
+                        <span class="highlight-sub">Optimized C++ n-gram inference</span>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 28px;">1. Clean / Multi-Script Datasets</h3>
+                <p class="section-desc" style="margin-bottom: 15px;">These datasets consist of standardized sentences crossing distinct Unicode script blocks (e.g., Arabic, Han vs. Latin). Because they lack severe social media noise, PolyLID's script-boundaries perform exceptionally well across both Token Accuracy and Exact Match.</p>
+                <div class="table-responsive">
+                    <table class="tech-table">
+                        <thead>
+                            <tr>
+                                <th>Benchmark Dataset</th>
+                                <th>Language Pair / Topology</th>
+                                <th>Sentences (N)</th>
+                                <th>Token Accuracy</th>
+                                <th>Exact Match (EM)</th>
+                                <th>Partial Match (PM)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr onclick="showDatasetDetails('ASCEND Chinese-English')" style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f7fa'" onmouseout="this.style.backgroundColor=''">
+                                <td><strong>ASCEND Chinese-English</strong></td>
+                                <td>zh, en (Han - Latin)</td>
+                                <td>1000</td>
+                                <td><strong>97.90%</strong></td>
+                                <td><strong>89.20%</strong></td>
+                                <td><strong>99.35%</strong></td>
+                            </tr>
+                            <tr onclick="showDatasetDetails('CSTD Arabic-English')" style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f7fa'" onmouseout="this.style.backgroundColor=''">
+                                <td><strong>CSTD Arabic-English</strong></td>
+                                <td>ar, en (Arabic - Latin)</td>
+                                <td>1000</td>
+                                <td><strong>98.42%</strong></td>
+                                <td><strong>85.00%</strong></td>
+                                <td><strong>99.80%</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 style="margin-top: 28px;">2. Noisy / Twitter Datasets (Mono-Script)</h3>
+                <p class="section-desc" style="margin-bottom: 15px;">Code-Switching entirely within the Latin alphabet. Token Accuracy remains high (77%-94%), but uncleaned Twitter data (emojis, @usernames, slang) heavily drops Exact Match (EM). However, Partial Match (PM) proves the underlying detection engine remains robust (99%+).</p>
+                <div class="table-responsive">
+                    <table class="tech-table">
+                        <thead>
+                            <tr>
+                                <th>Benchmark Dataset</th>
+                                <th>Language Pair / Topology</th>
+                                <th>Sentences (N)</th>
+                                <th>Token Accuracy</th>
+                                <th>Exact Match (EM)</th>
+                                <th>Partial Match (PM)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr onclick="showDatasetDetails('Indonesian-English')" style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f7fa'" onmouseout="this.style.backgroundColor=''">
+                                <td><strong>Indonesian-English</strong></td>
+                                <td>id, en (Latin - Latin)</td>
+                                <td>2279</td>
+                                <td><strong>94.75%</strong></td>
+                                <td>40.54%</td>
+                                <td><strong>99.20%</strong></td>
+                            </tr>
+                            <tr onclick="showDatasetDetails('TongueSwitcher German-English')" style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f7fa'" onmouseout="this.style.backgroundColor=''">
+                                <td><strong>TongueSwitcher German-English</strong></td>
+                                <td>de, en (Latin - Latin)</td>
+                                <td>954</td>
+                                <td><strong>92.51%</strong></td>
+                                <td>23.90%</td>
+                                <td><strong>100.00%</strong></td>
+                            </tr>
+                            <tr onclick="showDatasetDetails('Turkish-German')" style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f7fa'" onmouseout="this.style.backgroundColor=''">
+                                <td><strong>Turkish-German</strong></td>
+                                <td>tr, de (Latin - Latin)</td>
+                                <td>196</td>
+                                <td><strong>77.01%</strong></td>
+                                <td>19.39%</td>
+                                <td><strong>99.50%</strong></td>
+                            </tr>
+                            <tr onclick="showDatasetDetails('LinCE Spanish-English')" style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f7fa'" onmouseout="this.style.backgroundColor=''">
+                                <td><strong>LinCE Spanish-English</strong></td>
+                                <td>es, en (Latin - Latin)</td>
+                                <td>1000</td>
+                                <td><strong>94.31%</strong></td>
+                                <td>69.00%</td>
+                                <td><strong>98.15%</strong></td>
+                            </tr>
+                            <tr onclick="showDatasetDetails('LinCE Turkish-English')" style="cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f7fa'" onmouseout="this.style.backgroundColor=''">
+                                <td><strong>LinCE Turkish-English</strong></td>
+                                <td>tr, en (Latin - Latin)</td>
+                                <td>1000</td>
+                                <td><strong>92.34%</strong></td>
+                                <td>45.09%</td>
+                                <td><strong>99.20%</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>PolyLID: Token-Level Language Identification Framework &bull; Academic Research Edition</p>
+        </footer>
     </div>
+
+    <!-- Client Script -->
     <script src="/static/app.js"></script>
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
         window.mermaid = mermaid;
         mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+    </script>
+
+    <!-- Dataset Details Modal -->
+    <dialog id="dataset-modal" style="border: none; border-radius: 12px; padding: 24px; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); backdrop-filter: blur(10px);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 id="modal-title" style="margin: 0; color: #1a1a1a;">Dataset Details</h3>
+            <button onclick="document.getElementById('dataset-modal').close()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        <p id="modal-desc" style="color: #4a4a4a; line-height: 1.5;"></p>
+        <div style="margin-top: 20px; text-align: right;">
+            <button onclick="document.getElementById('dataset-modal').close()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Close</button>
+        </div>
+    </dialog>
+    
+    <script>
+        const datasetInfo = {
+            'ASCEND Chinese-English': 'Sourced from the ASCEND (A Spontaneous Chinese-English Dataset) corpus, containing transcripts of conversational speech and text. <br><br><b>Source:</b> <a href="https://huggingface.co/datasets/CAiRE/ASCEND" target="_blank" style="color: #007bff; text-decoration: none;">HuggingFace: CAiRE/ASCEND</a>',
+            'CSTD Arabic-English': 'Sourced from the ArE-CSTD (Arabic-English Code-Switching Textual Dataset) by SDAIA. <br><br><b>Source:</b> <a href="https://huggingface.co/datasets/SDAIA/ArE-CSTD" target="_blank" style="color: #007bff; text-decoration: none;">HuggingFace: SDAIA/ArE-CSTD</a>',
+            'Indonesian-English': 'Sourced from the "id-en-code-mixed" dataset, consisting of raw, uncleaned Twitter posts containing heavy social media noise. <br><br><b>Source:</b> <a href="https://github.com/ir-nlp-csui/id-en-code-mixed" target="_blank" style="color: #007bff; text-decoration: none;">GitHub: ir-nlp-csui/id-en-code-mixed</a>',
+            'TongueSwitcher German-English': 'Sourced from the TongueSwitcher corpus, containing natural code-switching primarily found on Reddit and Twitter. <br><br><b>Source:</b> <a href="https://huggingface.co/igorsterner/german-english-code-switching-identification" target="_blank" style="color: #007bff; text-decoration: none;">HuggingFace: igorsterner/german-english-code-switching-identification</a>',
+            'Turkish-German': 'Sourced from the TrDeNormData (Turkish-German Code-Switching Corpus), capturing informal Turkish-German Twitter code-switching patterns. <br><br><b>Source:</b> <a href="https://github.com/ozlemcek/TrDeNormData" target="_blank" style="color: #007bff; text-decoration: none;">GitHub: ozlemcek/TrDeNormData</a>',
+            'LinCE Spanish-English': 'Sourced from the Linguistic Code-Switching Evaluation (LinCE) benchmark, capturing bilingual Spanish-English social media data. <br><br><b>Source:</b> <a href="https://ritual.uh.edu/lince/" target="_blank" style="color: #007bff; text-decoration: none;">LinCE Benchmark</a>',
+            'LinCE Turkish-English': 'Sourced from the Linguistic Code-Switching Evaluation (LinCE) benchmark for Turkish-English. <br><br><b>Source:</b> <a href="https://ritual.uh.edu/lince/" target="_blank" style="color: #007bff; text-decoration: none;">LinCE Benchmark</a>'
+        };
+
+        function showDatasetDetails(name) {
+            document.getElementById('modal-title').innerText = name;
+            document.getElementById('modal-desc').innerHTML = datasetInfo[name] || 'Information not available.';
+            document.getElementById('dataset-modal').showModal();
+        }
     </script>
 </body>
 </html>

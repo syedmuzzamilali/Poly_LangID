@@ -1,0 +1,350 @@
+<USER_REQUEST>
+lets do like om datasets which directly have data like we did on other datssets 
+PolyLID Code-Mixed Dataset Access Registry
+Datasets identified from Hidayatullah et al. (2022) systematic review
+Purpose. This registry is intended to support a systematic cross-dataset evaluation of PolyLID. The review identifies 32 code-mixed datasets for language identification. The registry records the language combination, the review reference, the best verified public access route found, whether that route is a direct dataset download or a paper/resource page, and the expected compatibility with the frozen PolyLID evaluation inventory.
+Important scope note. The primary PolyLID evaluation should use the frozen operational inventory discussed in the thesis. Datasets containing unsupported languages, or datasets whose core language material is Romanized/transliterated, are retained in this registry for coverage analysis but should not be silently folded into the primary benchmark.
+1. Review basis
+Hidayatullah et al. (2022), IEEE Access, DOI 10.1109/ACCESS.2022.3223703, [open review paper](https://doi.org/10.1109/ACCESS.2022.3223703) . The paper explicitly reports that it recognized 32 code-mixed datasets for LID and presents the dataset quality criteria used in its Table 10. The language-pair list below follows that 32-dataset set.
+2. Dataset registry
+#
+Dataset
+Family combination
+Review ref.
+Access route
+Link
+Verification
+PolyLID status
+Notes
+1
+Indonesian-English
+Austronesian + Germanic
+[7]
+Direct dataset
+[Open](https://github.com/ir-nlp-csui/id-en-code-mixed)
+Verified
+Full
+825 tweets; token-level LID resource.
+2
+Malay-English
+Austronesian + Germanic
+[57]
+Repository / corpus route
+[Open](https://github.com/huseinzol05/Malay-Dataset)
+Verified route
+Full
+Review reports 6,543 items and 46% code-mixed; the linked corpus repository is a broader Malay resource, so verify exact subset before scoring.
+3
+Kannada-English
+Dravidian + Germanic
+[44]
+Direct dataset
+[Open](https://github.com/pritamdeka/CoLI-Kanglish)
+Verified
+Partial / excluded from primary 65-lang run
+CoLI-Kanglish is a word-level LID dataset; much of the material is Roman-script Kannada, so it is outside the primary standard-script scope.
+4
+Malayalam-English
+Dravidian + Germanic
+[47,64]
+Direct dataset
+[Open](https://data.mendeley.com/datasets/pn6xjx4zkd/1)
+Verified
+Partial / excluded from primary 65-lang run
+WoLLaI is directly downloadable, but its labels include Mal/Eng/Mix/Othr and should be mapped carefully.
+5
+Tamil-English
+Dravidian + Germanic
+[47,51]
+Research-paper / resource route
+[Open](https://aclanthology.org/2022.dravidianlangtech-1.1/)
+Access route
+Full
+Use the associated DravidianCodeMix/shared-task resources; verify the exact LID split used in the review.
+6
+Telugu-English
+Dravidian + Germanic
+[50]
+Research-paper / resource route
+[Open](https://aclanthology.org/2021.ranlp-1.85/)
+Verified paper route
+Full
+Paper explicitly introduces manually annotated Twitter and Blog Telugu-English LID datasets.
+7
+Dutch-Turkish
+Germanic + Trans-Eurasian
+[46]
+Research-paper route
+[Open](https://aclanthology.org/P17-1180/)
+Verified paper route
+Full
+Dataset discussed as part of generalized word-level LID on Twitter.
+8
+Dutch-English
+Germanic + Germanic
+[20,46,49]
+Research-paper / corpus route
+[Open](https://link.springer.com/chapter/10.1007/978-3-319-73706-5_16)
+Verified paper route
+Full
+Paper states the University of Amsterdam corpus was provided in plain text and reproduced completely in their study.
+9
+Dutch-Limburgish
+Germanic + Germanic
+[43]
+Research-paper route
+[Open](https://aclanthology.org/W16-5801/)
+Access route
+Unsupported
+Review lists 10,434 items; exact downloadable corpus location should be checked from the cited study.
+10
+German-English
+Germanic + Germanic
+[46]
+Corpus repository
+[Open](https://github.com/HaifaCLG/Denglisch)
+Verified
+Full
+Modern Denglisch corpus; use only if a compatible token-level split/annotation is selected.
+11
+Assamese-English
+Indo-Aryan + Germanic
+[21]
+Research-paper route
+[Open](https://aclanthology.org/W18-6116/)
+Verified paper route
+Unsupported
+Review reports 1,012 instances and 26,444 tokens; Assamese is not in the frozen 65-language inventory.
+12
+Assamese-Hindi-Bengali-English
+Indo-Aryan + Germanic
+[18,63]
+Paper / dataset route
+[Open](https://aclanthology.org/2020.icon-1.7/)
+Access route
+Partial / unsupported
+Multilingual dataset; Assamese prevents a full primary-inventory evaluation.
+13
+Bengali-English
+Indo-Aryan + Germanic
+[11,27,54]
+Research-paper / resource route
+[Open](https://aclanthology.org/W18-6116/)
+Verified paper route
+Full
+Use the exact Bengali-English LID corpus variant matching the cited study.
+14
+Bengali-Hindi-English
+Indo-Aryan + Germanic
+[54]
+Research-paper / resource route
+[Open](https://aclanthology.org/2020.icon-1.7/)
+Access route
+Full
+Three-language dataset; label mapping should be documented.
+15
+Gujarati-English
+Indo-Aryan + Germanic
+[59]
+Research-paper route
+[Open](https://ieeexplore.ieee.org/document/10016848)
+Access route
+Full
+Review-cited study; verify current institutional access/download availability.
+16
+Gujarati-Hindi-English
+Indo-Aryan + Germanic
+[58]
+Research-paper route
+[Open](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9956817)
+Access route
+Full
+Review reports 6,324 instances and 41,075 tokens.
+17
+Hindi-English
+Indo-Aryan + Germanic
+[11,15,37,48,52,54,60,61,65]
+Dataset hubs / repositories
+[Open](https://github.com/l3cube-pune/code-mixed-nlp)
+Verified
+Full, but exclude Romanized-only subsets from primary run
+The ecosystem contains multiple Hindi-English LID datasets. The repository includes L3Cube-HingLID; use only datasets whose script/label scheme matches the thesis protocol.
+18
+Konkani-English
+Indo-Aryan + Germanic
+[45]
+Research-paper route
+[Open](https://cdn.iiit.ac.in/cdn/ltrc.iiit.ac.in/icon2017/proceedings/icon2017/pdf/W17-7511.pdf)
+Verified paper route
+Unsupported / out of primary scope
+Review describes a Roman-script Konkani-English corpus; Konkani is not in the frozen inventory.
+19
+Punjabi-English
+Indo-Aryan + Germanic
+[16]
+Research / dataset route
+[Open](https://aclanthology.org/W16-5802/)
+Access route
+Full
+Review reports 40,000 tokens; inspect the cited study for its released corpus/attachment.
+20
+Sinhala-English
+Indo-Aryan + Germanic (review grouping)
+[3,56]
+Direct dataset
+[Open](https://huggingface.co/datasets/NLPC-UOM/Sinhala-English-Code-Mixed-Code-Switched-Dataset)
+Verified
+Unsupported
+10,000-comment corpus with sentence- and word-level language annotations; Sinhala is outside the 65-language inventory.
+21
+French-English
+Italic + Germanic
+[46]
+Research-paper route
+[Open](https://aclanthology.org/P17-1180/)
+Verified paper route
+Full
+Review reports 98 instances / 1,249 tokens for one corpus.
+22
+French-Italian-Spanish-English
+Italic + Germanic
+[55]
+Research-paper route
+[Open](https://aclanthology.org/W18-3206/)
+Access route
+Full
+Four-language code-mixed resource; verify the exact annotation format.
+23
+Portuguese-English
+Italic + Germanic
+[46]
+Research-paper route
+[Open](https://aclanthology.org/P17-1180/)
+Verified paper route
+Full
+Review reports 106 instances / 1,496 tokens.
+24
+Spanish-English
+Italic + Germanic
+[15,38,41,46,49]
+Direct shared-task portal
+[Open](https://ritual.uh.edu/lince/datasets)
+Verified
+Full
+LinCE/CodeSwitch resources; some historical Twitter datasets may be tweet-ID based.
+25
+Spanish-Wixarika
+Italic + American
+[22]
+Research-paper route
+[Open](https://aclanthology.org/P19-1180/)
+Access route
+Unsupported
+Wixarika is outside the frozen inventory.
+26
+Swahili-English
+Niger-Congo + Germanic
+[40]
+ACL attachment
+[Open](https://aclanthology.org/W16-5803/)
+Verified
+Full
+ACL page exposes W16-5803.Attachment.zip; strong candidate for direct acquisition.
+27
+Arabic-English
+Semitic + Germanic
+[23]
+Direct dataset
+[Open](https://github.com/CSabty/Arabic-English-Intra-Word-Code-Switching-Corpus)
+Verified
+Full
+30,321-token intra-word corpus; particularly useful for PolyLID sub-token evaluation.
+28
+Arabic-Modern Standard Arabic
+Semitic + Semitic
+[38,41]
+Research-paper route
+[Open](https://aclanthology.org/W16-5801/)
+Access route
+Full/conditional
+Review treats this as Arabic vs MSA; map dialect/label definitions before running standard PolyLID.
+29
+Bodo-English
+Sino-Tibetan + Germanic
+[62]
+Research-paper route
+[Open](https://aclanthology.org/2020.icon-1.9/)
+Access route
+Unsupported
+Review reports 15,022 tokens and 6,602 unique tokens; Bodo is outside the inventory.
+30
+Manipuri-English
+Sino-Tibetan + Germanic
+[39]
+Research-paper route
+[Open](https://aclanthology.org/W16-5809/)
+Access route
+Unsupported
+Review reports 1,000 instances; Manipuri/Meitei is outside the inventory.
+31
+Turkish-English
+Trans-Eurasian + Germanic
+[46,53]
+Direct shared-task portal
+[Open](https://ritual.uh.edu/lince/datasets)
+Verified
+Full
+Use LinCE Turkish-English where token labels and splits are available.
+32
+Turkish-German
+Trans-Eurasian + Germanic
+[22,49]
+Research-paper route
+[Open](https://aclanthology.org/P17-1180/)
+Verified paper route
+Full
+Historical Twitter dataset may require tweet-ID reconstruction; paper reports only a retrievable subset.
+3. Recommended acquisition workflow
+1. Download the dataset from the linked repository, attachment, or publisher/resource page.
+2. Preserve the original files unchanged and record the exact version/date in the experiment log.
+3. Inspect the annotation scheme before inference. PolyLID predicts language labels, while several review datasets additionally contain MIX, OTHER, NAME, LOCATION, UNKNOWN, or dialect-specific labels.
+4. Normalize the dataset labels to PolyLID canonical ISO-style codes only where the mapping is unambiguous.
+5. Run the full-coverage datasets under one fixed preprocessing protocol. Record tokenization, punctuation treatment, script handling, and sentence boundaries.
+6. For partial/unsupported datasets, retain a coverage record rather than fabricating or silently dropping unsupported labels.
+7. For Twitter datasets distributed via Tweet IDs, document whether the corpus was successfully reconstructed and report the retrievable subset size separately.
+4. High-priority datasets for the first evaluation batch
+Spanish-English — LinCE/shared-task resource — [open](https://ritual.uh.edu/lince/datasets)
+Turkish-English — LinCE/shared-task resource — [open](https://ritual.uh.edu/lince/datasets)
+Indonesian-English — Direct GitHub dataset — [open](https://github.com/ir-nlp-csui/id-en-code-mixed)
+Swahili-English — ACL attachment — [open](https://aclanthology.org/W16-5803/)
+Arabic-English — Intra-word corpus — [open](https://github.com/CSabty/Arabic-English-Intra-Word-Code-Switching-Corpus)
+German-English — Public corpus repository — [open](https://github.com/HaifaCLG/Denglisch)
+Telugu-English — RANLP paper and dataset description — [open](https://aclanthology.org/2021.ranlp-1.85/)
+Malayalam-English — Mendeley direct download — [open](https://data.mendeley.com/datasets/pn6xjx4zkd/1)
+Hindi-English — L3Cube code-mixed NLP repository — [open](https://github.com/l3cube-pune/code-mixed-nlp)
+Sinhala-English — Hugging Face dataset — [open](https://huggingface.co/datasets/NLPC-UOM/Sinhala-English-Code-Mixed-Code-Switched-Dataset)
+5. Acquisition risks and validation checks
+• Historical Twitter resources can be distributed as tweet IDs rather than text. A benchmark should distinguish the original corpus size from the successfully reconstructed subset.
+• Some datasets were created for broader code-mixed NLP tasks and include labels that are not directly language labels. A dedicated label-mapping step is required.
+• The review is from 2022. Several datasets now have newer mirrors, versions, or successor resources. The link in this document is the best currently located access route, not a claim that it is byte-identical to the historical release.
+• Romanized/transliterated datasets should be stored and documented, but they belong in a separate extension study because Romanization removes much of the script evidence used by the current PolyLID design.
+6. References
+A. F. Hidayatullah, A. Qazi, D. T. C. Lai, and R. A. Apong, “A Systematic Review on Language Identification of Code-Mixed Text: Techniques, Data Availability, Challenges, and Framework Development,” IEEE Access, vol. 10, pp. 122812–122831, 2022. DOI: 10.1109/ACCESS.2022.3223703.
+A. M. Barik, R. Mahendra, and M. Adriani, “Normalization of Indonesian-English Code-Mixed Twitter Data,” W-NUT 2019.
+S. K. Shashirekha et al., “Word-Level Language Identification in Code-mixed Kannada-English Texts,” ICON shared task / CoLI-Kanglish 2022.
+S. S. V. Kusampudi, A. Chaluvadi, and R. Mamidi, “Corpus Creation and Language Identification in Low-Resource Code-Mixed Telugu-English Text,” RANLP 2021.
+M. Piergallini, R. Shirvani, G. S. Gautam, and M. Chouikha, “Word-Level Language Identification and Predicting Codeswitching Points in Swahili-English Language Data,” CodeSwitch 2016.
+
+
+lets test on thwm which are supported so go to them download datasets to datasets folder and then perform test on datasets and prepare a detailed report  
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-09-17T20:30:18+05:30.
+
+The user's current state is as follows:
+Active Document: c:\Users\takweer\3D Objects\prmtblids\polylid_eval.py (LANGUAGE_PYTHON)
+Cursor is on line: 1
+Other open documents:
+- c:\Users\takweer\3D Objects\prmtblids\polylid_eval.py (LANGUAGE_PYTHON)
+- c:\Users\takweer\3D Objects\prmtblids\datasets\indonesian_english.jsonl (LANGUAGE_JSON)
+</ADDITIONAL_METADATA>

@@ -1,0 +1,42 @@
+{
+  "dataset": "lince_spaeng",
+  "raw_label_frequency": {
+    "und": 7698,
+    "es": 14213,
+    "en": 11933
+  },
+  "mapped_label_frequency": {
+    "und": 7698,
+    "es": 14213,
+    "en": 11933
+  },
+  "ignored_label_frequency": {
+    "und": 7698
+  },
+  "ignored_reasons": {
+    "unk": "Unknown",
+    "mixed": "Mixed",
+    "other": "Other",
+    "ambiguous": "Ambiguous",
+    "ne": "Named Entity",
+    "und": "Undefined"
+  },
+  "allowed_languages": [
+    "es",
+    "en"
+  ],
+  "mapping": {
+    "es": "es",
+    "en": "en",
+    "spa": "es",
+    "eng": "en",
+    "unk": "und",
+    "mixed": "und",
+    "other": "und",
+    "ambiguous": "und",
+    "ne": "und",
+    "und": "und",
+    "lang1": "es",
+    "lang2": "en"
+  }
+}

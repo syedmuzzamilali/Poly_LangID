@@ -1,4 +1,15 @@
 Flask
-fasttext
+fasttext-wheel
 lingua-language-detector
+huggingface_hub
+numpy
+pandas
+scikit-learn
+scipy
+psutil
+tabulate
+tqdm
+pytest
+pyyaml
+requests
 gunicorn

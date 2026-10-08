@@ -1,9 +1,24 @@
 document.addEventListener("DOMContentLoaded", () => {
     const inputEl = document.getElementById("input-text");
     const runBtn = document.getElementById("run-btn");
+    const charCountEl = document.getElementById("input-char-count");
+    
+    const resultsArea = document.getElementById("results-area");
     const spansContainer = document.getElementById("spans-container");
+    const langDistBar = document.getElementById("lang-dist-bar");
+    const langDistLegend = document.getElementById("lang-dist-legend");
+    const tokensTbody = document.getElementById("tokens-tbody");
+    
+    const statLatency = document.getElementById("stat-latency");
+    const statTokens = document.getElementById("stat-tokens");
+    const statSpans = document.getElementById("stat-spans");
 
-    runBtn.addEventListener("click", runAnalysis);
+    // Real-time character count
+    inputEl.addEventListener("input", () => {
+        charCountEl.textContent = inputEl.value.length;
+    });
+
+    // Enter key triggers detection
     inputEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -11,13 +26,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    runBtn.addEventListener("click", runAnalysis);
+
     async function runAnalysis() {
         const text = inputEl.value.trim();
         if (!text) return;
 
         runBtn.disabled = true;
-        runBtn.textContent = "...";
-        spansContainer.innerHTML = "";
+        runBtn.textContent = "Processing...";
 
         try {
             const response = await fetch("/api/identify", {
@@ -31,24 +47,85 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderResults(data);
             }
         } catch (err) {
-            console.error("Error:", err);
+            console.error("Inference request failed:", err);
         } finally {
             runBtn.disabled = false;
-            runBtn.textContent = "Enter";
+            runBtn.textContent = "Identify Languages";
         }
     }
 
     function renderResults(data) {
-        const { spans } = data;
+        const { spans, enriched_spans, tokens, metrics } = data;
         if (!spans || spans.length === 0) return;
 
+        resultsArea.style.display = "flex";
+
+        // 1. Stats Bar
+        statLatency.textContent = `Latency: ${metrics.latency_ms || 0} ms`;
+        statTokens.textContent = `Tokens: ${metrics.total_tokens || 0}`;
+        statSpans.textContent = `Spans: ${metrics.total_spans || 0}`;
+
+        // 2. Language Distribution Bar & Legend
+        langDistBar.innerHTML = "";
+        langDistLegend.innerHTML = "";
+        if (metrics.languages && metrics.languages.length > 0) {
+            metrics.languages.forEach(l => {
+                const seg = document.createElement("div");
+                seg.className = "lang-dist-segment";
+                seg.style.width = `${l.percentage}%`;
+                seg.style.backgroundColor = l.color || "#2563eb";
+                seg.title = `${l.name} (${l.percentage}%)`;
+                langDistBar.appendChild(seg);
+
+                const pill = document.createElement("div");
+                pill.className = "dist-pill";
+                pill.innerHTML = `
+                    <span class="dist-dot" style="background-color: ${l.color};"></span>
+                    <span>${l.name} (${l.code}): <strong>${l.percentage}%</strong></span>
+                `;
+                langDistLegend.appendChild(pill);
+            });
+        }
+
+        // 3. Highlighted Spans Output Box
         spansContainer.innerHTML = "";
-        spans.forEach(([spanText, lang]) => {
-            const tag = document.createElement("span");
+        const spanList = enriched_spans || spans.map(([text, lang]) => ({
+            text, lang, name: lang.toUpperCase(), color: "#2563eb"
+        }));
+
+        spanList.forEach(item => {
+            const tag = document.createElement("div");
             tag.className = "span-tag";
-            tag.innerHTML = `<span>${escapeHtml(spanText)}</span><span class="span-lang">[${escapeHtml(lang || "und")}]</span>`;
+            tag.style.borderColor = item.color ? `${item.color}40` : "#cbd5e1";
+            tag.innerHTML = `
+                <span class="span-text">${escapeHtml(item.text)}</span>
+                <span class="span-badge" style="--span-color: ${item.color || '#2563eb'};">
+                    <span>${escapeHtml(item.name || item.lang)}</span>
+                </span>
+            `;
             spansContainer.appendChild(tag);
         });
+
+        // 4. Token-by-Token Breakdown Table
+        tokensTbody.innerHTML = "";
+        if (tokens && tokens.length > 0) {
+            tokens.forEach(t => {
+                const tr = document.createElement("tr");
+                const confPercent = Math.round((t.confidence || 1.0) * 100);
+                tr.innerHTML = `
+                    <td class="tok-word">${escapeHtml(t.token)}</td>
+                    <td><span class="chip-code">${escapeHtml(t.script || 'Latin')}</span></td>
+                    <td>
+                        <span class="span-badge" style="--span-color: ${t.lang_color || '#2563eb'};">
+                            <span>${escapeHtml(t.lang_name || t.label)}</span>
+                        </span>
+                    </td>
+                    <td><strong>${confPercent}%</strong></td>
+                    <td><span class="hint-text">${escapeHtml(t.reason || t.decided_by || 'Direct Model Decision')}</span></td>
+                `;
+                tokensTbody.appendChild(tr);
+            });
+        }
     }
 
     function escapeHtml(str) {
@@ -62,43 +139,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Tab Navigation Logic
-    const btnTabMain = document.getElementById("btn-tab-main");
-    const btnTabTech = document.getElementById("btn-tab-tech");
-    const tabMain = document.getElementById("tab-main");
-    const tabTech = document.getElementById("tab-tech");
+    const tabs = [
+        { btn: document.getElementById("btn-tab-main"), pane: document.getElementById("tab-main") },
+        { btn: document.getElementById("btn-tab-arch"), pane: document.getElementById("tab-arch") },
+        { btn: document.getElementById("btn-tab-eval"), pane: document.getElementById("tab-eval") }
+    ];
 
-    if (btnTabMain && btnTabTech && tabMain && tabTech) {
-        btnTabMain.addEventListener("click", () => {
-            btnTabMain.classList.add("active");
-            btnTabTech.classList.remove("active");
-            tabMain.style.display = "block";
-            tabTech.style.display = "none";
-        });
+    tabs.forEach(({ btn, pane }) => {
+        if (!btn || !pane) return;
+        btn.addEventListener("click", async () => {
+            tabs.forEach(t => {
+                if (t.btn) t.btn.classList.remove("active");
+                if (t.pane) t.pane.style.display = "none";
+            });
+            btn.classList.add("active");
+            pane.style.display = "block";
 
-        btnTabTech.addEventListener("click", async () => {
-            btnTabTech.classList.add("active");
-            btnTabMain.classList.remove("active");
-            tabTech.style.display = "block";
-            tabMain.style.display = "none";
-
-            if (window.mermaid && !tabTech.dataset.mermaidRendered) {
-                tabTech.dataset.mermaidRendered = "true";
+            // If navigating to Architecture tab, render Mermaid flowchart
+            if (btn.id === "btn-tab-arch" && window.mermaid && !pane.dataset.mermaidRendered) {
+                pane.dataset.mermaidRendered = "true";
                 try {
                     await window.mermaid.run({ querySelector: '.mermaid' });
                 } catch (e) {
-                    console.error("Mermaid run error:", e);
+                    console.error("Mermaid execution error:", e);
                 }
             }
         });
-    }
+    });
 
     // Example Buttons Logic
     const exampleBtns = document.querySelectorAll(".example-btn");
     exampleBtns.forEach(btn => {
         btn.addEventListener("click", () => {
-            if (inputEl && runBtn) {
+            if (inputEl) {
                 inputEl.value = btn.getAttribute("data-text");
-                runBtn.click();
+                charCountEl.textContent = inputEl.value.length;
+                runAnalysis();
             }
         });
     });

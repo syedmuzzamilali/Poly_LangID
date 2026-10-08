@@ -1,0 +1,34 @@
+{
+  "dataset": "arabic_english",
+  "raw_label_frequency": {
+    "ar": 19324,
+    "und": 4637,
+    "en": 6360
+  },
+  "mapped_label_frequency": {
+    "ar": 19324,
+    "und": 4637,
+    "en": 6360
+  },
+  "ignored_label_frequency": {
+    "und": 4637
+  },
+  "ignored_reasons": {
+    "un": "Punctuation",
+    "und": "Undefined",
+    "ambiguous": "Ambiguous token",
+    "ne": "Named entity (can be lang neutral)"
+  },
+  "allowed_languages": [
+    "ar",
+    "en"
+  ],
+  "mapping": {
+    "ar": "ar",
+    "en": "en",
+    "un": "un",
+    "und": "und",
+    "ambiguous": "und",
+    "ne": "und"
+  }
+}

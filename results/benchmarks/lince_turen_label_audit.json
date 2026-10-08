@@ -1,0 +1,38 @@
+{
+  "dataset": "lince_turen",
+  "raw_label_frequency": {
+    "tr": 3941,
+    "en": 1489
+  },
+  "mapped_label_frequency": {
+    "tr": 3941,
+    "en": 1489
+  },
+  "ignored_label_frequency": {},
+  "ignored_reasons": {
+    "unk": "Unknown",
+    "mixed": "Mixed",
+    "other": "Other",
+    "ambiguous": "Ambiguous",
+    "ne": "Named Entity",
+    "und": "Undefined"
+  },
+  "allowed_languages": [
+    "tr",
+    "en"
+  ],
+  "mapping": {
+    "tr": "tr",
+    "en": "en",
+    "tur": "tr",
+    "eng": "en",
+    "unk": "und",
+    "mixed": "und",
+    "other": "und",
+    "ambiguous": "und",
+    "ne": "und",
+    "und": "und",
+    "lang1": "tr",
+    "lang2": "en"
+  }
+}

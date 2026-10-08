@@ -1,0 +1,10 @@
+{
+  "pooled_token_accuracy": 0.8957567499049309,
+  "dataset_macro_token_accuracy": 0.8849535078130295,
+  "dataset_macro_f1": 0.7395403018203079,
+  "overall_exact_match": 0.46877658669389144,
+  "overall_partial_match": 0.8531349233093213,
+  "pooled_boundary_precision": 0.5981067125645438,
+  "pooled_boundary_recall": 0.46429287193533303,
+  "pooled_boundary_f1": 0.5227725751250518
+}

@@ -1,0 +1,54 @@
+{
+  "dataset_name": "arabic_english",
+  "source_file_path": "datasets/arabic_english.jsonl",
+  "split": "test",
+  "source_revision": "HEAD",
+  "execution_timestamp": "2026-10-08T20:25:50.561714",
+  "sentence_count": 2507,
+  "raw_gold_label_frequencies": {
+    "ar": 19365,
+    "en": 6527
+  },
+  "normalized_gold_label_frequencies": {
+    "ar": 19365,
+    "en": 6527
+  },
+  "ignored_raw_label_frequencies": {
+    "und": 2245
+  },
+  "predicted_label_frequencies": {
+    "en": 16848,
+    "ar": 9044
+  },
+  "allowed_language_set": [
+    "ar",
+    "en"
+  ],
+  "total_gold_tokens": 28137,
+  "evaluated_tokens": 25892,
+  "ignored_tokens": 2245,
+  "correct_tokens": 15011,
+  "token_accuracy": 0.5797543642824038,
+  "exact_match": 0.24791666666666667,
+  "partial_match": 0.44870618091411435,
+  "macro_f1": 0.5757451240785147,
+  "weighted_f1": 0.5961943198423323,
+  "gold_boundary_count": 3524,
+  "predicted_boundary_count": 455,
+  "boundary_true_positives": 388,
+  "boundary_false_positives": 67,
+  "boundary_false_negatives": 3136,
+  "boundary_precision": 0.8527472527472527,
+  "boundary_recall": 0.11010215664018161,
+  "boundary_f1": 0.1950238753455642,
+  "model_versions": "polylid",
+  "cache_configuration": "disabled",
+  "per_language_precision_ar": 0.9690402476780186,
+  "per_language_recall_ar": 0.45256906790601603,
+  "per_language_f1_ar": 0.616987574360238,
+  "per_language_support_ar": 19365,
+  "per_language_precision_en": 0.3707858499525166,
+  "per_language_recall_en": 0.9571012716408763,
+  "per_language_f1_en": 0.5345026737967914,
+  "per_language_support_en": 6527
+}

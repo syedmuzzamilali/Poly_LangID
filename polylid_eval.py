@@ -174,6 +174,8 @@ class EvalResult:
     token_macro_f1: float
     token_weighted_f1: float
     boundary_f1: float
+    exact_match: float
+    partial_match: float
     span_exact: float
     span_overlap: float
     avg_latency_ms: float
@@ -200,8 +202,8 @@ def evaluate_one(detector_module: str, dataset: List[dict], limit: int | None = 
     if limit:
         dataset = dataset[:limit]
 
-    texts = [x["text"] for x in dataset]
-    gold_spans_all = [x["spans"] for x in dataset]
+    texts = [x.get("text", "") for x in dataset]
+    gold_spans_all = [x.get("spans", []) for x in dataset]
 
     Y_TRUE, Y_PRED = [], []
     meta_rows = []
@@ -223,6 +225,9 @@ def evaluate_one(detector_module: str, dataset: List[dict], limit: int | None = 
     boundary_total = Counter()
     boundary_err = Counter()
     boundary_tp = boundary_fp = boundary_fn = 0
+    exact_match_hits = 0
+    partial_match_hits = 0
+    total_sentences = 0
     span_exact_total = 0
     span_exact_hit = 0
     span_overlap_sum = 0.0
@@ -318,7 +323,24 @@ def evaluate_one(detector_module: str, dataset: List[dict], limit: int | None = 
             for p in pred_tags:
                 pred_freq[p] += 1
 
-            acc = accuracy_score(gold_tags, pred_tags)
+            if not gold_tags: continue
+            
+            # Filter out 'un' tags for EM/PM calculation
+            filtered_gold = []
+            filtered_pred = []
+            for g, p in zip(gold_tags, pred_tags):
+                if g != 'un' and g != 'und':
+                    filtered_gold.append(g)
+                    filtered_pred.append(p)
+            
+            if filtered_gold:
+                acc = accuracy_score(filtered_gold, filtered_pred)
+                if acc == 1.0:
+                    exact_match_hits += 1
+                if acc >= 0.5:
+                    partial_match_hits += 1
+                total_sentences += 1
+                
             cmi = calculate_cmi(gold_tags)
             switches = sum(gold_tags[k] != gold_tags[k+1] for k in range(len(gold_tags) - 1))
             meta_rows.append({
@@ -415,6 +437,8 @@ def evaluate_one(detector_module: str, dataset: List[dict], limit: int | None = 
         df_meta["cmi_bin"] = pd.cut(df_meta["cmi"], [-1, 0, 15, 100], labels=["Monolingual", "LowMix", "HighMix"])
 
     # span overlap / exact
+    exact_match = exact_match_hits / max(1, total_sentences)
+    partial_match = partial_match_hits / max(1, total_sentences)
     span_exact = span_exact_hit / max(1, span_exact_total)
     span_overlap = span_overlap_sum / max(1, span_overlap_count)
 
@@ -433,6 +457,8 @@ def evaluate_one(detector_module: str, dataset: List[dict], limit: int | None = 
         token_macro_f1=macro_f1,
         token_weighted_f1=weighted_f1,
         boundary_f1=boundary_f1,
+        exact_match=exact_match,
+        partial_match=partial_match,
         span_exact=span_exact,
         span_overlap=span_overlap,
         avg_latency_ms=avg_latency_ms,
@@ -456,6 +482,8 @@ def render_html(results: List[EvalResult], report_file: str, trace_file: str, da
         "macro_f1": r.token_macro_f1,
         "weighted_f1": r.token_weighted_f1,
         "boundary_f1": r.boundary_f1,
+        "exact_match": r.exact_match,
+        "partial_match": r.partial_match,
         "span_exact": r.span_exact,
         "span_overlap": r.span_overlap,
         "avg_latency_ms": r.avg_latency_ms,
@@ -497,6 +525,10 @@ code{{background:#f1f3f5;padding:2px 4px;border-radius:4px}}
             "macro_f1": r.token_macro_f1,
             "weighted_f1": r.token_weighted_f1,
             "boundary_f1": r.boundary_f1,
+            "exact_match": r.exact_match,
+            "partial_match": r.partial_match,
+            "exact_match": r.exact_match,
+            "partial_match": r.partial_match,
             "span_exact": r.span_exact,
             "span_overlap": r.span_overlap,
             "avg_latency_ms": r.avg_latency_ms,
@@ -518,7 +550,10 @@ code{{background:#f1f3f5;padding:2px 4px;border-radius:4px}}
         html.append("</section>")
 
     # optional traces
-    html.append(f"<section><h2>Forensic Trace</h2><pre style='white-space:pre-wrap'>{escape('\n'.join(results[0].trace_lines[:5000]) if results else '')}</pre></section>")
+    html.append(f"<section><h2>Forensic Trace</h2><pre style='white-space:pre-wrap'>")
+    if results:
+        html.append(escape(chr(10).join(results[0].trace_lines[:5000])))
+    html.append("</pre></section>")
     html.append("</body></html>")
 
 
@@ -541,6 +576,8 @@ def render_md(results: List[EvalResult], md_file: str, dataset_size: int):
         "token_acc": r.token_acc,
         "macro_f1": r.token_macro_f1,
         "boundary_f1": r.boundary_f1,
+        "exact_match": r.exact_match,
+        "partial_match": r.partial_match,
         "latency_ms": r.avg_latency_ms,
         "mem_mb": r.peak_mem_mb
     } for r in results])
@@ -555,6 +592,10 @@ def render_md(results: List[EvalResult], md_file: str, dataset_size: int):
             "macro_f1": r.token_macro_f1,
             "weighted_f1": r.token_weighted_f1,
             "boundary_f1": r.boundary_f1,
+            "exact_match": r.exact_match,
+            "partial_match": r.partial_match,
+            "exact_match": r.exact_match,
+            "partial_match": r.partial_match,
             "span_exact": r.span_exact,
             "span_overlap": r.span_overlap,
             "avg_latency_ms": r.avg_latency_ms,
@@ -598,7 +639,7 @@ def render_md(results: List[EvalResult], md_file: str, dataset_size: int):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", default=DATASET_PATH_DEFAULT)
-    ap.add_argument("--detectors", default="polybeta",
+    ap.add_argument("--detectors", default="polylid",
                     help="Comma-separated detector modules to compare.")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--batch-size", type=int, default=128)
@@ -682,7 +723,7 @@ def main():
         with open(args.dataset, "r", encoding="utf-8") as f:
             raw_json = json.load(f)
             if isinstance(raw_json, dict) and "data" in raw_json:
-                from polybeta import LANG_NAME_TO_CODE
+                from polylid import LANG_NAME_TO_CODE
                 dataset = []
                 for item in raw_json["data"]:
                     text = item.get("native sentence", "")
@@ -709,9 +750,11 @@ def main():
 
     print("DONE")
     for r in results:
-        print(r.name, "macro_f1=", round(r.token_macro_f1, 4), "token_acc=", round(r.token_acc, 4), "boundary_f1=", round(r.boundary_f1, 4))
+        print(r.name, "macro_f1=", round(r.token_macro_f1, 4), "token_acc=", round(r.token_acc, 4), "boundary_f1=", round(r.boundary_f1, 4), "EM=", round(r.exact_match, 4), "PM=", round(r.partial_match, 4))
     print("Report:", "PolyBench_Report.html")
     print("Trace:", args.trace)
 
 if __name__ == "__main__":
     main()
+
+
