@@ -1,10 +1,34 @@
 {
+  "source_revision": "a4a05d6735bdcfe7f9c0185ca4c332353c2f2257",
+  "working_tree_clean": true,
+  "execution_timestamp_utc": "2026-10-08T20:41:53.450720+00:00",
+  "dataset_count": 7,
+  "total_sentences": 5877,
+  "total_gold_tokens": 135993,
+  "total_evaluated_tokens": 126224,
+  "total_ignored_tokens": 9769,
+  "total_correct_tokens": 113066,
   "pooled_token_accuracy": 0.8957567499049309,
   "dataset_macro_token_accuracy": 0.8849535078130295,
-  "dataset_macro_f1": 0.7395403018203079,
+  "dataset_macro_f1": 0.8765199136127393,
+  "combined_token_macro_f1": 0.8910063090773125,
+  "combined_token_weighted_f1": 0.8922182997775684,
   "overall_exact_match": 0.46877658669389144,
   "overall_partial_match": 0.8531349233093213,
+  "boundary_tp": 6950,
+  "boundary_fp": 4670,
+  "boundary_fn": 8019,
   "pooled_boundary_precision": 0.5981067125645438,
   "pooled_boundary_recall": 0.46429287193533303,
-  "pooled_boundary_f1": 0.5227725751250518
+  "pooled_boundary_f1": 0.5227725751250518,
+  "definitions": {
+    "pooled_token_accuracy": "sum(correct tokens) / sum(evaluated tokens)",
+    "dataset_macro_token_accuracy": "arithmetic mean of dataset token accuracies",
+    "dataset_macro_f1": "arithmetic mean of corrected dataset macro-F1 values",
+    "combined_token_macro_f1": "macro F1 over concatenated evaluated token labels",
+    "combined_token_weighted_f1": "weighted F1 over concatenated evaluated token labels",
+    "overall_exact_match": "exactly correct sentences / evaluated sentences",
+    "overall_partial_match": "mean sentence-level token agreement",
+    "pooled_boundary_f1": "F1 calculated after summing boundary TP, FP, and FN"
+  }
 }
