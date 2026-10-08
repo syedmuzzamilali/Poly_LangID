@@ -4,7 +4,7 @@ import pandas as pd
 import json
 
 def test_thesis_ready_percentages_are_rounded():
-    df = pd.read_csv("results/thesis/table_benchmark_results.csv")
+    df = pd.read_csv("results/thesis/table_benchmark_results.csv", dtype=str)
     for col in ["Token accuracy (%)", "Macro F1 (%)", "Exact Match (%)", "Partial Match (%)", "Boundary F1 (%)"]:
         for val in df[col]:
             # Should have exactly two decimal places
@@ -33,8 +33,7 @@ def test_combined_token_metric_support():
     # "support" in classification report
     # The last row is usually 'macro avg', 'weighted avg', etc. 
     # But for individual classes, their sum should be 126224.
-    # Actually, we can just get the 'support' column and sum the individual labels (which are not strings like 'accuracy', 'macro avg', 'weighted avg').
-    individual_labels = [idx for idx in df.index if idx not in ["accuracy", "macro avg", "weighted avg"]]
+    individual_labels = [idx for idx in df.index if idx not in ["accuracy", "micro avg", "macro avg", "weighted avg"]]
     total_support = df.loc[individual_labels, "support"].sum()
     assert total_support == 126224
 
