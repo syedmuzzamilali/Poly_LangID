@@ -288,19 +288,42 @@ def run_all_benchmarks(clear_cache=True, allow_dirty=False):
     print("Saved to results/benchmarks/per_language_metrics.csv")
     
     # RECALCULATE OVERALL METRICS (with sklearn)
-    combined_labels = sorted(set(all_gold_labels))
-    combined_token_macro_f1 = f1_score(all_gold_labels, all_predicted_labels, labels=combined_labels, average="macro", zero_division=0)
-    combined_token_weighted_f1 = f1_score(all_gold_labels, all_predicted_labels, labels=combined_labels, average="weighted", zero_division=0)
+    expected_labels = sorted(set(all_gold_labels))
+    union_labels = sorted(set(all_gold_labels) | set(all_predicted_labels))
+    predicted_only_labels = sorted(set(all_predicted_labels) - set(all_gold_labels))
+    gold_only_labels = sorted(set(all_gold_labels) - set(all_predicted_labels))
     
-    # Classification Report
-    cr = classification_report(all_gold_labels, all_predicted_labels, labels=combined_labels, output_dict=True, zero_division=0)
-    cr_df = pd.DataFrame(cr).transpose()
-    cr_df.to_csv("results/benchmarks/combined_token_classification_report.csv", index=True, float_format="%.12f")
+    print("Sorted unique gold labels:", expected_labels)
+    print("Sorted unique predicted labels:", sorted(set(all_predicted_labels)))
+    print("Predicted-only labels:", predicted_only_labels)
+    print("Gold-only labels:", gold_only_labels)
+    
+    predicted_only_counts = {lbl: all_predicted_labels.count(lbl) for lbl in predicted_only_labels}
+    print("Predicted-only label counts:", predicted_only_counts)
+    
+    combined_expected_label_macro_f1 = f1_score(all_gold_labels, all_predicted_labels, labels=expected_labels, average="macro", zero_division=0)
+    combined_union_label_macro_f1 = f1_score(all_gold_labels, all_predicted_labels, labels=union_labels, average="macro", zero_division=0)
+    combined_token_weighted_f1 = f1_score(all_gold_labels, all_predicted_labels, labels=union_labels, average="weighted", zero_division=0)
+    
+    from sklearn.metrics import precision_recall_fscore_support
+    micro_p, micro_r, micro_f1, _ = precision_recall_fscore_support(all_gold_labels, all_predicted_labels, labels=union_labels, average="micro", zero_division=0)
+    
+    # Classification Reports
+    cr_exp = classification_report(all_gold_labels, all_predicted_labels, labels=expected_labels, output_dict=True, zero_division=0)
+    cr_exp_df = pd.DataFrame(cr_exp).transpose()
+    cr_exp_df.to_csv("results/benchmarks/combined_expected_label_classification_report.csv", index=True, float_format="%.12f")
+    
+    cr_union = classification_report(all_gold_labels, all_predicted_labels, labels=union_labels, output_dict=True, zero_division=0)
+    cr_union_df = pd.DataFrame(cr_union).transpose()
+    cr_union_df.to_csv("results/benchmarks/combined_union_label_classification_report.csv", index=True, float_format="%.12f")
     
     # Confusion Matrix
-    cm = confusion_matrix(all_gold_labels, all_predicted_labels, labels=combined_labels)
-    cm_df = pd.DataFrame(cm, index=combined_labels, columns=combined_labels)
-    cm_df.to_csv("results/benchmarks/combined_token_confusion_matrix.csv", index=True)
+    cm = confusion_matrix(all_gold_labels, all_predicted_labels, labels=union_labels)
+    cm_df = pd.DataFrame(cm, index=union_labels, columns=union_labels)
+    cm_df.to_csv("results/benchmarks/combined_token_confusion_matrix_union.csv", index=True)
+    
+    # Save predicted-only labels
+    pd.DataFrame(list(predicted_only_counts.items()), columns=["label", "prediction_count"]).to_csv("results/benchmarks/predicted_only_labels.csv", index=False)
     
     overall = {
         "source_revision": source_revision,
@@ -315,8 +338,14 @@ def run_all_benchmarks(clear_cache=True, allow_dirty=False):
         "pooled_token_accuracy": float(df["correct_tokens"].sum()) / float(df["evaluated_tokens"].sum()),
         "dataset_macro_token_accuracy": float(df["token_accuracy"].mean()),
         "dataset_macro_f1": float(df["macro_f1"].mean()),
-        "combined_token_macro_f1": float(combined_token_macro_f1),
+        "combined_expected_label_macro_f1": float(combined_expected_label_macro_f1),
+        "combined_union_label_macro_f1": float(combined_union_label_macro_f1),
         "combined_token_weighted_f1": float(combined_token_weighted_f1),
+        "micro_precision": float(micro_p),
+        "micro_recall": float(micro_r),
+        "micro_f1": float(micro_f1),
+        "predicted_only_label_count": len(predicted_only_labels),
+        "predicted_only_token_count": sum(predicted_only_counts.values()),
         "overall_exact_match": float((df["exact_match"] * df["sentences"]).sum() / df["sentences"].sum()),
         "overall_partial_match": float((df["partial_match"] * df["sentences"]).sum() / df["sentences"].sum()),
         "boundary_tp": int(df["boundary_tp"].sum()),
@@ -332,8 +361,9 @@ def run_all_benchmarks(clear_cache=True, allow_dirty=False):
         "pooled_token_accuracy": "sum(correct tokens) / sum(evaluated tokens)",
         "dataset_macro_token_accuracy": "arithmetic mean of dataset token accuracies",
         "dataset_macro_f1": "arithmetic mean of corrected dataset macro-F1 values",
-        "combined_token_macro_f1": "macro F1 over concatenated evaluated token labels",
-        "combined_token_weighted_f1": "weighted F1 over concatenated evaluated token labels",
+        "combined_expected_label_macro_f1": "macro F1 over concatenated evaluated tokens using only expected gold labels",
+        "combined_union_label_macro_f1": "macro F1 over concatenated evaluated tokens using the union of gold and predicted labels",
+        "combined_token_weighted_f1": "weighted F1 over concatenated evaluated tokens using the union of gold and predicted labels",
         "overall_exact_match": "exactly correct sentences / evaluated sentences",
         "overall_partial_match": "mean sentence-level token agreement",
         "pooled_boundary_f1": "F1 calculated after summing boundary TP, FP, and FN"
@@ -378,16 +408,17 @@ def run_all_benchmarks(clear_cache=True, allow_dirty=False):
     
     # 3. results/thesis/table_overall_results.csv
     or_df = pd.DataFrame([
-        {"Metric": "pooled token accuracy", "Value": f"{overall['pooled_token_accuracy'] * 100:.2f}%", "Aggregation definition": overall["definitions"]["pooled_token_accuracy"]},
-        {"Metric": "dataset-macro token accuracy", "Value": f"{overall['dataset_macro_token_accuracy'] * 100:.2f}%", "Aggregation definition": overall["definitions"]["dataset_macro_token_accuracy"]},
-        {"Metric": "dataset-macro F1", "Value": f"{overall['dataset_macro_f1'] * 100:.2f}%", "Aggregation definition": overall["definitions"]["dataset_macro_f1"]},
-        {"Metric": "combined token macro F1", "Value": f"{overall['combined_token_macro_f1'] * 100:.2f}%", "Aggregation definition": overall["definitions"]["combined_token_macro_f1"]},
-        {"Metric": "combined token weighted F1", "Value": f"{overall['combined_token_weighted_f1'] * 100:.2f}%", "Aggregation definition": overall["definitions"]["combined_token_weighted_f1"]},
-        {"Metric": "overall Exact Match", "Value": f"{overall['overall_exact_match'] * 100:.2f}%", "Aggregation definition": overall["definitions"]["overall_exact_match"]},
-        {"Metric": "overall Partial Match", "Value": f"{overall['overall_partial_match'] * 100:.2f}%", "Aggregation definition": overall["definitions"]["overall_partial_match"]},
-        {"Metric": "pooled boundary precision", "Value": f"{overall['pooled_boundary_precision'] * 100:.2f}%", "Aggregation definition": "TP / (TP + FP)"},
-        {"Metric": "pooled boundary recall", "Value": f"{overall['pooled_boundary_recall'] * 100:.2f}%", "Aggregation definition": "TP / (TP + FN)"},
-        {"Metric": "pooled boundary F1", "Value": f"{overall['pooled_boundary_f1'] * 100:.2f}%", "Aggregation definition": overall["definitions"]["pooled_boundary_f1"]}
+        {"Metric": "Pooled token accuracy", "Value": f"{overall['pooled_token_accuracy'] * 100:.2f}%", "Aggregation definition": "sum(correct tokens) / sum(evaluated tokens)"},
+        {"Metric": "Dataset-macro token accuracy", "Value": f"{overall['dataset_macro_token_accuracy'] * 100:.2f}%", "Aggregation definition": "arithmetic mean of dataset token accuracies"},
+        {"Metric": "Dataset-macro F1", "Value": f"{overall['dataset_macro_f1'] * 100:.2f}%", "Aggregation definition": "arithmetic mean of dataset macro-F1 values"},
+        {"Metric": "Combined expected-label macro F1", "Value": f"{overall['combined_expected_label_macro_f1'] * 100:.2f}%", "Aggregation definition": "macro F1 over the seven target gold language labels"},
+        {"Metric": "Combined union-label macro F1", "Value": f"{overall['combined_union_label_macro_f1'] * 100:.2f}%", "Aggregation definition": "macro F1 over the union of gold and predicted labels. Includes four predicted-only labels covering 28 tokens."},
+        {"Metric": "Combined token weighted F1", "Value": f"{overall['combined_token_weighted_f1'] * 100:.2f}%", "Aggregation definition": "weighted F1 over concatenated evaluated tokens"},
+        {"Metric": "Overall Exact Match", "Value": f"{overall['overall_exact_match'] * 100:.2f}%", "Aggregation definition": "exactly correct sentences / evaluated sentences"},
+        {"Metric": "Overall Partial Match", "Value": f"{overall['overall_partial_match'] * 100:.2f}%", "Aggregation definition": "mean sentence-level token agreement"},
+        {"Metric": "Pooled boundary precision", "Value": f"{overall['pooled_boundary_precision'] * 100:.2f}%", "Aggregation definition": "TP / (TP + FP)"},
+        {"Metric": "Pooled boundary recall", "Value": f"{overall['pooled_boundary_recall'] * 100:.2f}%", "Aggregation definition": "TP / (TP + FN)"},
+        {"Metric": "Pooled boundary F1", "Value": f"{overall['pooled_boundary_f1'] * 100:.2f}%", "Aggregation definition": "F1 calculated from pooled TP FP and FN"}
     ])
     or_df.to_csv("results/thesis/table_overall_results.csv", index=False)
     

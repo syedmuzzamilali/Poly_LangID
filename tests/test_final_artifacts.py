@@ -2,14 +2,17 @@ import pytest
 import os
 import pandas as pd
 import json
+from datetime import datetime, timezone
 
 def test_all_final_artifacts_exist():
     artifacts = [
         "results/benchmarks/benchmark_results_final.csv",
         "results/benchmarks/per_language_metrics.csv",
         "results/benchmarks/overall_metrics.json",
-        "results/benchmarks/combined_token_classification_report.csv",
-        "results/benchmarks/combined_token_confusion_matrix.csv",
+        "results/benchmarks/combined_expected_label_classification_report.csv",
+        "results/benchmarks/combined_union_label_classification_report.csv",
+        "results/benchmarks/combined_token_confusion_matrix_union.csv",
+        "results/benchmarks/predicted_only_labels.csv",
         "results/benchmarks/benchmark_validation_report_final.md",
         "results/thesis/table_unit_tests.csv",
         "results/thesis/table_benchmark_results.csv",
@@ -22,6 +25,28 @@ def test_all_final_artifacts_exist():
     ]
     for artifact in artifacts:
         assert os.path.exists(artifact), f"Missing artifact: {artifact}"
+
+def test_reports_use_different_label_lists():
+    exp_df = pd.read_csv("results/benchmarks/combined_expected_label_classification_report.csv", index_col=0)
+    union_df = pd.read_csv("results/benchmarks/combined_union_label_classification_report.csv", index_col=0)
+    
+    # expected report has 7 languages + 3 averages = 10 rows
+    assert len(exp_df.index) == 10
+    
+    # union report has 11 languages + 3 averages = 14 rows
+    assert len(union_df.index) == 14
+    
+    assert list(exp_df.index)[:7] == ["ar", "de", "en", "es", "id", "tr", "zh"]
+    assert list(union_df.index)[:11] == ["ar", "de", "el", "en", "es", "id", "ja", "kn", "th", "tr", "zh"]
+
+def test_predicted_only_labels_do_not_disappear():
+    union_df = pd.read_csv("results/benchmarks/combined_union_label_classification_report.csv", index_col=0)
+    for lbl in ["el", "ja", "kn", "th"]:
+        assert lbl in union_df.index
+        row = union_df.loc[lbl]
+        assert row["support"] == 0
+        assert row["recall"] == 0
+        assert row["f1-score"] == 0
 
 def test_every_artifact_uses_the_same_commit_hash():
     # Only verify across CSV and JSON that embed the commit hash
@@ -41,6 +66,18 @@ def test_timezone_aware_timestamps():
     df = pd.read_csv("results/benchmarks/benchmark_results_final.csv")
     for ts in df["execution_timestamp_utc"]:
         assert "+00:00" in ts or "Z" in ts
+    
+    with open("results/benchmarks/overall_metrics.json", "r") as f:
+        overall = json.load(f)
+    assert "+00:00" in overall["execution_timestamp_utc"] or "Z" in overall["execution_timestamp_utc"]
+
+def test_final_artifacts_commit_hash_and_clean_tree():
+    with open("results/benchmarks/overall_metrics.json", "r") as f:
+        overall = json.load(f)
+    
+    if os.environ.get("PRECOMMIT") == "1":
+        pytest.skip("Skipping clean tree check for pre-commit")
+    assert overall["working_tree_clean"] is True
 
 def test_aggregate_csv_contains_script_topology_and_split():
     df = pd.read_csv("results/benchmarks/benchmark_results_final.csv")

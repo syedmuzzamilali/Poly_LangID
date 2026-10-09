@@ -19,7 +19,7 @@ The diagnostic run on the 50-sample CSTD Arabic-English dataset returned 0.0% me
 - However, PolyLID's underlying detection model (FastText `lid.176`) strictly associates Latin script with English (or other Latin-script languages) and expects Arabic to be written in the Arabic script.
 - As a result, PolyLID consistently predicted `en` for these Arabizi tokens.
 - We confirmed this by running a swapped-label diagnostic on the 50 samples, which achieved a **92.11% accuracy** when Arabic was treated as English.
-- The full 1,000-sample dataset contains more standard Arabic script later in the file, which explains why the full benchmark achieves a much more reasonable 69.80% Token Accuracy.
+- The full 1,000-sample dataset contains more standard Arabic script later in the file, which explains why the full benchmark achieves a much more reasonable Token Accuracy.
 
 ## 4. Documentation Recommendations
 We strongly recommend updating the PolyLID documentation to reflect the following benchmark realism and limitations:
