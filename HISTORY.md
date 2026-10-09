@@ -82,3 +82,9 @@ Implemented strict boundary transition evaluation and span overlap metrics in ev
 
 ---
 
+## [2026-10-09] Zero-Training Engine Constraint Finalization
+
+Enforced strict zero-training invariants: eliminated heuristic hardcoded overrides in favor of probability pooling.
+
+---
+
