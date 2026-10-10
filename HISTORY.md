@@ -88,3 +88,9 @@ Enforced strict zero-training invariants: eliminated heuristic hardcoded overrid
 
 ---
 
+## [2026-10-10] Cross-Dataset Token Annotation Forensic Audit
+
+Audited token annotations and script purity across 7 canonical corpora to isolate gold-label discrepancies.
+
+---
+
