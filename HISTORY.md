@@ -94,3 +94,9 @@ Audited token annotations and script purity across 7 canonical corpora to isolat
 
 ---
 
+## [2026-10-11] Uncertainty-Triggered Context Escalation
+
+Implemented selective context escalation: token classifier relies on local context only when expert models disagree.
+
+---
+
