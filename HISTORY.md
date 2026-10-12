@@ -100,3 +100,9 @@ Implemented selective context escalation: token classifier relies on local conte
 
 ---
 
+## [2026-10-12] Component Ablation Study (5,876 Sentences)
+
+Executed 12-configuration ablation study (A1-A8, G0-G3), demonstrating +6.83% accuracy gain from candidate restriction.
+
+---
+
