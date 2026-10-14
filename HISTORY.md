@@ -106,3 +106,9 @@ Executed 12-configuration ablation study (A1-A8, G0-G3), demonstrating +6.83% ac
 
 ---
 
+## [2026-10-14] E4 Open-World Benchmark Release Seal & Checksums
+
+Sealed authoritative E4 Open-World benchmark package with SHA-256 verification across all 7 evaluation splits.
+
+---
+
