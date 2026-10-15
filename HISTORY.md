@@ -112,3 +112,9 @@ Sealed authoritative E4 Open-World benchmark package with SHA-256 verification a
 
 ---
 
+## [2026-10-15] Dataset Manifest v2 & Sentence Accounting Verification
+
+Verified checksums and exact sentence-level accounting across 5,876 canonical evaluation utterances.
+
+---
+
