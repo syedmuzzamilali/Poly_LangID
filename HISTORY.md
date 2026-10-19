@@ -118,3 +118,9 @@ Verified checksums and exact sentence-level accounting across 5,876 canonical ev
 
 ---
 
+## [2026-10-19] Controlled Recovery Matrix & Spanish-English Alignment
+
+Analyzed Lingua-first cascade configurations and recovered 908-sentence LinCE Spa-Eng partition.
+
+---
+
