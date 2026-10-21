@@ -124,3 +124,9 @@ Analyzed Lingua-first cascade configurations and recovered 908-sentence LinCE Sp
 
 ---
 
+## [2026-10-21] Dataset Mapping Integrity & Boundary Tests
+
+Strengthened test_boundary_metrics.py and test_dataset_mappings.py to protect against regression.
+
+---
+
