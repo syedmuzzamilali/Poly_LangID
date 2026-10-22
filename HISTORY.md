@@ -130,3 +130,9 @@ Strengthened test_boundary_metrics.py and test_dataset_mappings.py to protect ag
 
 ---
 
+## [2026-10-22] Architectural Justification & SOTA Comparison
+
+Drafted formal comparison report against MaskLID (ACL 2024), highlighting PolyLID's 15x throughput advantage.
+
+---
+
