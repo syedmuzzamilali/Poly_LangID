@@ -136,3 +136,9 @@ Drafted formal comparison report against MaskLID (ACL 2024), highlighting PolyLI
 
 ---
 
+## [2026-10-28] Multi-Language Stress Testing & Fault-Line Isolation
+
+Conducted multi-lingual adversarial stress test across synthetic sentences to discover edge-case fault lines.
+
+---
+
