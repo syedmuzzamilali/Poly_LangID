@@ -142,3 +142,9 @@ Conducted multi-lingual adversarial stress test across synthetic sentences to di
 
 ---
 
+## [2026-10-30] 10k Multilingual Benchmark In-Inventory Metrics
+
+Validated 10,000-sentence multilingual code-switched benchmark achieving 94.48% in-inventory accuracy.
+
+---
+
