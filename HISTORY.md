@@ -148,3 +148,9 @@ Validated 10,000-sentence multilingual code-switched benchmark achieving 94.48% 
 
 ---
 
+## [2026-11-02] Authentic Native-Script 10-Corpus Catalog Compendium
+
+Published comprehensive DATASETS_CATALOG.md documenting 21 corpora and 751,127 evaluated tokens.
+
+---
+
