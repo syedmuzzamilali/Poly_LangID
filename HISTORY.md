@@ -154,3 +154,9 @@ Published comprehensive DATASETS_CATALOG.md documenting 21 corpora and 751,127 e
 
 ---
 
+## [2026-11-05] Multi-Model Probability Mass Consensus Design
+
+Formulated statistical multi-model probability mass consensus algorithm for intra-script language disambiguation.
+
+---
+
