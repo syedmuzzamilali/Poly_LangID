@@ -1,9 +1,0 @@
-label,type,count
-de,raw_gold,2436
-tr,raw_gold,6726
-de,mapped_gold,2436
-tr,mapped_gold,6726
-de,predicted,2630
-tr,predicted,6507
-en,predicted,25
-und,ignored_raw,2246

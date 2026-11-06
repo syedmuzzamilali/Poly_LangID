@@ -1,9 +1,0 @@
-thesis/
-archive/
-a/
-datasets/
-.venv/
-__pycache__/
-.pytest_cache/
-results/tests/
-.coverage

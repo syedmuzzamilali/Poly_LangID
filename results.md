@@ -151,3 +151,4 @@ python evaluation/generate_thesis_tables.py
 - **SHA-256 Checksum (`thesis_benchmark_tables.md`)**: `36CC6C44A63D02848E97ABAACE6BA61A696F4ED593732BD90BB475B687BCD533`  
 - **Dataset Inventory**: [DATASETS_CATALOG.md](file:///d:/Users/takweer/3D%20Objects/prmtblids/DATASETS_CATALOG.md)  
 - **Git Commit**: `ecb5d04` (Clean feature commit) + `9829558` (Historic 2025 streak merge)
+

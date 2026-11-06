@@ -1,6 +1,0 @@
-Category,Total Tokens,Correct,Accuracy
-ar_arabic,8764,8764,1.0
-ar_latin,10597,0,0.0
-ar_mixed,0,0,0.0
-ar_other,4,0,0.0
-en_all,6527,6247,0.9571012716408763
