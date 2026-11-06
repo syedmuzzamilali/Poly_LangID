@@ -160,3 +160,9 @@ Formulated statistical multi-model probability mass consensus algorithm for intr
 
 ---
 
+## [2026-11-06] Intra-Script Code-Switching Optimization (Options A-E & G)
+
+Optimized ru-uk (79.26%), tr-de (92.39%), es-en (94.27%), id-en (91.24%), tr-en (92.36%), and passed 5/5 adversarial vectors.
+
+---
+
